@@ -1,15 +1,9 @@
 #include "inc/includes.hxx"
 
-sf::RenderWindow window(sf::VideoMode(1280, 720, 9),"");
-sf::Font font;
-sf::Music music;
-const u8 fontSize = 24;
 const u8 titleX = 6;
 const u8 titleY = 22;
 const u16 titleOptAmnt = 4;
-u16* menuIndex;
-u8* musIndex;
-u8* sfxIndex;
+const float volFadeSpeed = 1.75;
 
 const Option titleMenu[] = 
 {
@@ -19,53 +13,44 @@ const Option titleMenu[] =
     {titleX+31,titleY,"Preferences"},
 };
 
-static void drawMenu(const Option* option, u16 length)
+static void selectMenuTitle()
 {
-    for (u16 i = 0; i < length; i++)
+    float volume;
+    while (window.isOpen())
     {
-        Option o = option[i];
-        sf::Text optionLabel;
-        optionLabel.setFont(font);
-        optionLabel.setString(o.label);
-        optionLabel.setPosition(o.x*fontSize,o.y*fontSize);
-        optionLabel.setCharacterSize(fontSize);
-        optionLabel.setOutlineThickness(3.5);
-        window.draw(optionLabel);
-        sf::Text selectedLabel;
-        selectedLabel.setFont(font);
-        selectedLabel.setString(option[*menuIndex].label);
-        selectedLabel.setPosition(option[*menuIndex].x*fontSize,option[*menuIndex].y*fontSize);
-        selectedLabel.setCharacterSize(fontSize);
-        selectedLabel.setOutlineThickness(3.5);
-        selectedLabel.setOutlineColor(sf::Color(0x00CC66FF));
-        window.draw(selectedLabel);
-    }
-}
-
-
-/// @brief Fades music in or out.
-/// @param direction False = in, True = out
-/// @param speed Smaller = slower
-static void fadeMusic(bool direction, float speed)
-{
-    float volume = music.getVolume();
-    if (direction)
-    {
-        volume -= speed;
-        if (volume <= 0)
+        if (volume == 0)
         {
-            return;
+            break;
+        }
+        sf::Event e;
+        volume = music.getVolume();
+        fadeMusic(true,volFadeSpeed);
+        screenFade(volFadeSpeed,false);
+        window.draw(fadeRect);
+        window.display();
+        while (window.pollEvent(e))
+        {
+            if (e.type == sf::Event::Closed)
+            {
+                window.close();
+                return;
+            }
         }
     }
-    else
+    switch (*menuIndex)
     {
-        volume += speed;
-        if (volume >= 100)
+        case 3:
         {
-            return;
+            prefsScreen();
+            break;
+        }
+        default:
+        {
+            fprintf(stderr,"Feature will be added soon!");
+            exit(1);
+            break;
         }
     }
-    music.setVolume(volume);
 }
 
 static void title()
@@ -97,10 +82,14 @@ static void title()
     titleSprite.setTexture(titleTexture);
     titleSprite.setPosition(160,0);
     float volume = 100;
-    sf::SoundBuffer sb;
-    sb.loadFromFile(menuSFX);
-    sf::Sound snd;
-    snd.setBuffer(sb);
+    sf::SoundBuffer sbHvr;
+    sbHvr.loadFromFile(hoverSFX);
+    sf::Sound sndHvr;
+    sndHvr.setBuffer(sbHvr);
+    sf::SoundBuffer sbCnf;
+    sbCnf.loadFromFile(confSFX);
+    sf::Sound sndCnf;
+    sndCnf.setBuffer(sbCnf);
     while (window.isOpen())
     {
         sf::Event event;
@@ -127,32 +116,32 @@ static void title()
                 }
                 if (event.key.scancode == sf::Keyboard::Scan::Left)
                 {
-                    
+                    sndHvr.play();
                     if (*menuIndex == 0)
                     {
-                        break;
+                        *menuIndex = titleOptAmnt-1;
                     }
                     else
                     {
-                        snd.play();
                         *menuIndex -= 1;
                     }
                 }
                 else if (event.key.scancode == sf::Keyboard::Scan::Right)
                 {
+                    sndHvr.play();
                     if (*menuIndex >= titleOptAmnt-1)
                     {
-                        break;
+                        *menuIndex = 0;
                     }
                     else
                     {
-                        snd.play();
                         *menuIndex += 1;
                     }
                 }
                 if (event.key.scancode == sf::Keyboard::Scan::Enter)
                 {
-                    snd.play();
+                    sndCnf.play();
+                    selectMenuTitle();
                 }
                 break;
             }
@@ -180,19 +169,8 @@ int main(int argc, char** argv)
     font.loadFromFile(blazeTTF);
     window.setFramerateLimit(60);
     menuIndex = new u16(0);
+    fadeRect.setSize(sf::Vector2f(1280,720));
+    fadeRect.setFillColor(sf::Color::Transparent);
     title();
-    while (window.isOpen())
-    {
-        sf::Event event;
-        window.clear(sf::Color::Black);
-        window.display();
-        while (window.pollEvent(event))
-        {
-            if (event.type == sf::Event::Closed)
-            {
-                window.close();
-            }
-        }
-    }
     return 0;
 }
