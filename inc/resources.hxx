@@ -12,3 +12,4 @@ extern const std::string hoverSFX;
 extern const std::string titleTrack;
 extern const std::string lfTrack;
 extern const std::string confSFX;
+extern const std::string lsTrack;

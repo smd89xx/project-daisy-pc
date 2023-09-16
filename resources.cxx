@@ -10,3 +10,4 @@ const std::string hoverSFX = "res/sfx/hover.ogg";
 const std::string titleTrack = "res/mus/title.ogg";
 const std::string lfTrack = "res/mus/aiz2.ogg";
 const std::string confSFX = "res/sfx/select.ogg";
+const std::string lsTrack = "res/mus/prefs.ogg";

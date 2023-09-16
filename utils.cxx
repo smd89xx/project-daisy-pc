@@ -5,6 +5,11 @@ sf::Font font;
 sf::Music music;
 sf::RectangleShape fadeRect;
 const u8 fontSize = 24;
+sf::SoundBuffer sbHvr;
+sf::Sound sndHvr;
+sf::SoundBuffer sbCnf;
+sf::Sound sndCnf;
+const float volFadeSpeed = 1.75;
 
 /// @brief Fades the screen in or out.
 /// @param speed Speed of the fade. Bigger value = faster fade.
@@ -34,17 +39,17 @@ void screenFade(float speed, bool direction)
 /// @brief Renders an Option structure.
 /// @param option Option structure.
 /// @param length Amount of items inside the option structure.
-void drawMenu(const Option* option, u16 length)
+void drawMenu(const structs::Option* option, u16 length)
 {
-    for (u16 i = 0; i < length; i++)
+    sf::Color playerColors[] = {sf::Color(0x00CC66FF),sf::Color(0x7FCC66FF)};
+    for (u8 i = 0; i < length; i++)
     {
-        Option o = option[i];
+        structs::Option o(option[i]);
         sf::Text optionLabel;
         optionLabel.setFont(font);
         optionLabel.setString(o.label);
         optionLabel.setPosition(o.x*fontSize,o.y*fontSize);
         optionLabel.setCharacterSize(fontSize);
-        optionLabel.setOutlineThickness(3.5);
         window.draw(optionLabel);
         sf::Text selectedLabel;
         selectedLabel.setFont(font);
@@ -52,7 +57,7 @@ void drawMenu(const Option* option, u16 length)
         selectedLabel.setPosition(option[*menuIndex].x*fontSize,option[*menuIndex].y*fontSize);
         selectedLabel.setCharacterSize(fontSize);
         selectedLabel.setOutlineThickness(3.5);
-        selectedLabel.setOutlineColor(sf::Color(0x00CC66FF));
+        selectedLabel.setOutlineColor(playerColors[!player]);
         window.draw(selectedLabel);
     }
 }

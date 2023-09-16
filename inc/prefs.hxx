@@ -1,7 +1,6 @@
 #pragma once
 
-extern u16* menuIndex;
-extern u8* musIndex;
-extern u8* sfxIndex;
+extern u8* menuIndex;
+extern bool player;
 
 void prefsScreen();

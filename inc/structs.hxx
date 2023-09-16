@@ -2,9 +2,14 @@
 
 #include "includes.hxx"
 
-typedef struct
+namespace structs
 {
-    u8 x;
-    u8 y;
-    std::string label;
-}Option;
+    class Option
+    {
+        public:
+            float x;
+            float y;
+            std::string label;
+        ~Option();
+    };
+}
