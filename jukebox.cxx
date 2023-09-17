@@ -17,6 +17,35 @@ const structs::SndMData musHdr[] =
     {confSFX,"Menu Select","Game","TheWindowsPro98",false,true}
 };
 
+static void jukeboxBack()
+{
+    float volume;
+    while (window.isOpen())
+    {
+        if (volume == 0)
+        {
+            music.stop();
+            music.setVolume(100);
+            break;
+        }
+        sf::Event e;
+        volume = music.getVolume();
+        fadeMusic(true,volFadeSpeed);
+        screenFade(volFadeSpeed,false);
+        window.draw(fadeRect);
+        window.display();
+        while (window.pollEvent(e))
+        {
+            if (e.type == sf::Event::Closed)
+            {
+                window.close();
+                return;
+            }
+        }
+    }
+    prefsScreen();
+}
+
 void jukebox()
 {
     fadeRect.setFillColor(sf::Color::Black);
@@ -111,6 +140,7 @@ void jukebox()
                 else if (e.key.scancode == sf::Keyboard::Scan::Escape)
                 {
                     sndCnf.play();
+                    jukeboxBack();
                 }
                 break;
             }
