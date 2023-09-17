@@ -1,8 +1,9 @@
 #include "inc/includes.hxx"
 
-const u8 titleX = 6;
-const u8 titleY = 22;
-const u8 titleOptAmnt = 4;
+const types::u8 titleX = 6;
+const types::u8 titleY = 22;
+const types::u8 titleOptAmnt = 4;
+const types::legacyString comingSoonText = "Feature will be added soon!\n";
 
 const structs::Option titleMenu[] = 
 {
@@ -47,7 +48,8 @@ static void selectMenuTitle()
         }
         default:
         {
-            fprintf(stderr,"Feature will be added soon!");
+            fprintf(stderr,"%s",comingSoonText);
+            
             exit(1);
             break;
         }
@@ -116,7 +118,7 @@ void title()
                     }
                     else
                     {
-                        *menuIndex -= 1;
+                        (*menuIndex)--;
                     }
                 }
                 else if (event.key.scancode == sf::Keyboard::Scan::Right)
@@ -128,7 +130,7 @@ void title()
                     }
                     else
                     {
-                        *menuIndex += 1;
+                        (*menuIndex)++;
                     }
                 }
                 if (event.key.scancode == sf::Keyboard::Scan::Enter)

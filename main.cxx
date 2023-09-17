@@ -16,8 +16,9 @@ int main(int argc, char** argv)
     }
     window.setIcon(16,16,icon.getPixelsPtr());
     font.loadFromFile(blazeTTF);
+    font.setSmooth(false);
     window.setFramerateLimit(60);
-    menuIndex = new u8(0);
+    menuIndex = new types::u8(0);
     fadeRect.setSize(sf::Vector2f(1280,720));
     fadeRect.setFillColor(sf::Color::Black);
     sbHvr.loadFromFile(hoverSFX);

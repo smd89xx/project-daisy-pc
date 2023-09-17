@@ -4,7 +4,7 @@ sf::RenderWindow window(sf::VideoMode(1280, 720),"",sf::Style::Close);
 sf::Font font;
 sf::Music music;
 sf::RectangleShape fadeRect;
-const u8 fontSize = 24;
+const types::u8 fontSize = 24;
 sf::SoundBuffer sbHvr;
 sf::Sound sndHvr;
 sf::SoundBuffer sbCnf;
@@ -12,6 +12,7 @@ sf::Sound sndCnf;
 sf::Text templateText;
 const float volFadeSpeed = 1.75;
 const float scrnFadeSpeed = 2;
+const sf::Color playerColors[] = {sf::Color(0xAA22EEFF),sf::Color(0x00CC66FF)};
 
 /// @brief Fades the screen in or out.
 /// @param speed Speed of the fade. Bigger value = faster fade.
@@ -41,10 +42,9 @@ void screenFade(float speed, bool direction)
 /// @brief Renders an Option structure.
 /// @param option Option structure.
 /// @param length Amount of items inside the option structure.
-void drawMenu(const structs::Option* option, u16 length)
+void drawMenu(const structs::Option* option, types::u8 length)
 {
-    sf::Color playerColors[] = {sf::Color(0x00CC66FF),sf::Color(0x7FCC66FF)};
-    for (u8 i = 0; i < length; i++)
+    for (types::u8 i = 0; i < length; i++)
     {
         structs::Option o(option[i]);
         sf::Text optionLabel(templateText);
@@ -55,7 +55,7 @@ void drawMenu(const structs::Option* option, u16 length)
         selectedLabel.setString(option[*menuIndex].label);
         selectedLabel.setPosition(pixelToTile(option[*menuIndex].x),pixelToTile(option[*menuIndex].y));
         selectedLabel.setOutlineThickness(3.5);
-        selectedLabel.setOutlineColor(playerColors[!player]);
+        selectedLabel.setOutlineColor(playerColors[player]);
         window.draw(selectedLabel);
     }
 }
