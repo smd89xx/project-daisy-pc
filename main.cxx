@@ -9,17 +9,24 @@ int main(int argc, char** argv)
     std::string titleStr = programTitle + " " + releaseStageStringsL[releaseStage] + " " + vcStr + " " + buildTitle;
     window.setTitle(titleStr);
     sf::Image icon;
-    icon.loadFromFile(favicon);
+    if (!icon.loadFromFile(favicon))
+    {
+        fprintf(stderr,"Assets not found.");
+        exit(1);
+    }
     window.setIcon(16,16,icon.getPixelsPtr());
     font.loadFromFile(blazeTTF);
     window.setFramerateLimit(60);
     menuIndex = new u8(0);
     fadeRect.setSize(sf::Vector2f(1280,720));
-    fadeRect.setFillColor(sf::Color::Transparent);
+    fadeRect.setFillColor(sf::Color::Black);
     sbHvr.loadFromFile(hoverSFX);
     sndHvr.setBuffer(sbHvr);
     sbCnf.loadFromFile(confSFX);
     sndCnf.setBuffer(sbCnf);
+    templateText.setFont(font);
+    templateText.setCharacterSize(fontSize);
+    templateText.setString("Default string.");
     title();
     return 0;
 }

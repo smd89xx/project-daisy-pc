@@ -56,6 +56,7 @@ static void selectMenuTitle()
 
 void title()
 {
+    fadeRect.setFillColor(sf::Color::Black);
     std::string vmajStr = std::to_string(versionMajor);
     std::string vminStr = std::to_string(versionMinor);
     std::string vrevStr = std::to_string(versionRevision);
@@ -64,15 +65,12 @@ void title()
     music.openFromFile(titleTrack);
     music.setLoop(true);
     music.play();
-    sf::Text copyInfo,versionText;
+    sf::Text copyInfo(templateText);
+    sf::Text versionText(templateText);
     copyInfo.setString(L"©TheWindowsPro98 2023");
-    copyInfo.setCharacterSize(fontSize);
-    copyInfo.setFont(font);
-    copyInfo.setPosition(0,696);
+    copyInfo.setPosition(0,pixelToTile(29));
     versionText.setString(versionCombined);
-    versionText.setFont(font);
-    versionText.setCharacterSize(fontSize);
-    versionText.setPosition(160,144);
+    versionText.setPosition(pixelToTile(6.75),pixelToTile(6));
     sf::Texture titleTexture;
     sf::Image titlePixels;
     titlePixels.loadFromFile(titleImg);
@@ -81,16 +79,18 @@ void title()
     titleTexture.setSmooth(true);
     sf::Sprite titleSprite;
     titleSprite.setTexture(titleTexture);
-    titleSprite.setPosition(160,0);
+    titleSprite.setPosition(pixelToTile(6.75),0);
     float volume = 100;
     while (window.isOpen())
     {
         sf::Event event;
+        screenFade(volFadeSpeed*3,true);
         window.clear(sf::Color::Black);
         window.draw(copyInfo);
         window.draw(versionText);
         window.draw(titleSprite);
         drawMenu(titleMenu,4);
+        window.draw(fadeRect);
         window.display();
         while (window.pollEvent(event))
         {
@@ -103,7 +103,7 @@ void title()
             }
             case sf::Event::KeyPressed:
             {
-                if (!window.hasFocus())
+                if (!window.hasFocus() or fadeRect.getFillColor().a != 0)
                 {
                     break;
                 }

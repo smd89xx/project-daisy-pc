@@ -12,4 +12,15 @@ namespace structs
             std::string label;
         ~Option();
     };
+    class SndMData
+    {
+        public:
+            std::string songPath;
+            std::string songTitle;
+            std::string songAlbum;
+            std::string songArtist;
+            bool loop;
+            bool isSFX;
+        ~SndMData();
+    };
 }

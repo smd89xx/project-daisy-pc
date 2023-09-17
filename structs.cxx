@@ -3,4 +3,5 @@
 namespace structs
 {
     Option::~Option(){};
+    SndMData::~SndMData(){};
 }

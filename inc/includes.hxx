@@ -12,5 +12,6 @@
 #include "version.hxx"
 #include "structs.hxx"
 #include "title.hxx"
+#include "jukebox.hxx"
 #include "prefs.hxx"
 #include "utils.hxx"

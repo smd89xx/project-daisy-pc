@@ -48,6 +48,12 @@ static void selectMenuPrefs()
     }
     switch (*menuIndex)
     {
+        case 6:
+        {
+            *menuIndex = 0;
+            jukebox();
+            break;
+        }
         case 7:
         {
             *menuIndex = 3;
@@ -69,20 +75,16 @@ void prefsScreen()
     music.play();
     *menuIndex = 0;
     fadeRect.setFillColor(sf::Color::Black);
-    sf::Text diffStr;
-    diffStr.setFont(font);
+    sf::Text diffStr(templateText);
     diffStr.setString("Difficulty:");
-    diffStr.setCharacterSize(fontSize);
-    diffStr.setPosition(prefsX*fontSize,prefsY*fontSize);
-    sf::Text plrStr;
-    plrStr.setFont(font);
+    diffStr.setPosition(pixelToTile(prefsX),pixelToTile(prefsY));
+    sf::Text plrStr(templateText);
     plrStr.setString("Player:");
-    plrStr.setCharacterSize(fontSize);
-    plrStr.setPosition((prefsX+plrXDeltaGlobal)*fontSize,(prefsY+2)*fontSize);
+    plrStr.setPosition(pixelToTile(prefsX+plrXDeltaGlobal),pixelToTile(prefsY+2));
     while (window.isOpen())
     {
         sf::Event e;
-        screenFade(volFadeSpeed*2,true);
+        screenFade(volFadeSpeed*3,true);
         window.clear(sf::Color::Black);
         window.draw(diffStr);
         window.draw(plrStr);

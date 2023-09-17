@@ -11,8 +11,10 @@ extern sf::SoundBuffer sbHvr;
 extern sf::Sound sndHvr;
 extern sf::SoundBuffer sbCnf;
 extern sf::Sound sndCnf;
+extern sf::Text templateText;
 extern const float volFadeSpeed;
 
 void screenFade(float speed, bool direction);
 void drawMenu(const structs::Option* option, u16 length);
 void fadeMusic(bool direction, float speed);
+float pixelToTile(float pos);

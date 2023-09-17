@@ -9,7 +9,9 @@ sf::SoundBuffer sbHvr;
 sf::Sound sndHvr;
 sf::SoundBuffer sbCnf;
 sf::Sound sndCnf;
+sf::Text templateText;
 const float volFadeSpeed = 1.75;
+const float scrnFadeSpeed = 2;
 
 /// @brief Fades the screen in or out.
 /// @param speed Speed of the fade. Bigger value = faster fade.
@@ -45,17 +47,13 @@ void drawMenu(const structs::Option* option, u16 length)
     for (u8 i = 0; i < length; i++)
     {
         structs::Option o(option[i]);
-        sf::Text optionLabel;
-        optionLabel.setFont(font);
+        sf::Text optionLabel(templateText);
         optionLabel.setString(o.label);
-        optionLabel.setPosition(o.x*fontSize,o.y*fontSize);
-        optionLabel.setCharacterSize(fontSize);
+        optionLabel.setPosition(pixelToTile(o.x),pixelToTile(o.y));
         window.draw(optionLabel);
-        sf::Text selectedLabel;
-        selectedLabel.setFont(font);
+        sf::Text selectedLabel(templateText);
         selectedLabel.setString(option[*menuIndex].label);
-        selectedLabel.setPosition(option[*menuIndex].x*fontSize,option[*menuIndex].y*fontSize);
-        selectedLabel.setCharacterSize(fontSize);
+        selectedLabel.setPosition(pixelToTile(option[*menuIndex].x),pixelToTile(option[*menuIndex].y));
         selectedLabel.setOutlineThickness(3.5);
         selectedLabel.setOutlineColor(playerColors[!player]);
         window.draw(selectedLabel);
@@ -85,4 +83,12 @@ void fadeMusic(bool direction, float speed)
         }
     }
     music.setVolume(volume);
+}
+
+/// @brief Converts a pixel co-ordinate to a tile co-ordinate (font size).
+/// @param pos Position (in tiles)
+/// @return Position in tiles
+float pixelToTile(float pos)
+{
+    return pos * fontSize;
 }

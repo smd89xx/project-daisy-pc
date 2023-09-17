@@ -9,7 +9,7 @@ It's a PC game thing.
  
  - A working C++ compiler
  
-   - I personally use Clang++, but g++ should work too.
+   - I personally use Clang++, but g++ should work too. MSVC++ compatibility not guaranteed.
  
  - [CMake](https://cmake.org/)
 
