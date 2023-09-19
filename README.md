@@ -7,9 +7,9 @@ It's a PC game thing.
 
  - [SFML](https://www.sfml-dev.org/)
  
- - A working C++ compiler
+ - Clang++/G++ (Linux)
  
-   - I personally use Clang++, but g++ should work too. MSVC++ is incompatible with this branch.
+ - Microsoft Visual Studio 2022 (Windows)
  
  - [CMake](https://cmake.org/)
 
@@ -37,4 +37,10 @@ and you will have an executable binary.
 
 ### On Windows
 
-You should not use this branch. Use `windows-msvcxx` instead.
+1. Download SFML 2.6.0 for your target architecture and Visual Studio version, and extract the `SFML-2.6.0` directory to the root of your C: drive.
+
+2. Copy all DLL files from `SFML-2.6.0\bin` to the root of the repository.
+
+3. Open the solution.
+
+The solution should now be ready to build and run.
