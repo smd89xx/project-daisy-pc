@@ -9,7 +9,7 @@ It's a PC game thing.
  
  - A working C++ compiler
  
-   - I personally use Clang++, but g++ should work too. MSVC++ compatibility not guaranteed.
+   - I personally use Clang++, but g++ should work too. MSVC++ is incompatible with this branch.
  
  - [CMake](https://cmake.org/)
 
@@ -34,3 +34,7 @@ Once either command is finished, run
     cmake --build .
 
 and you will have an executable binary.
+
+### On Windows
+
+You should not use this branch. Use `windows-msvcxx` instead.
