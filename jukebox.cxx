@@ -11,13 +11,13 @@ const float musTypeXDelta = 9.25;
 const float musDurationXDelta = 12.5;
 const structs::SndMData musHdr[] = 
 {
-    {testTrack,"Test Track","Game","TheWindowsPro98",true,false},
-    {lvlClearTrack,"Act Complete","Game","TheWindowsPro98",false,false},
-    {titleTrack,"Character Select","Sonic Advance","Tatsuyuki Maeda, Yutaka Minobe, Teruhiko Nakagawa",true,false},
-    {lfTrack,"Angel Island Zone (Act 2)","Sonic the Hedgehog 3","Unknown Artist",true,false},
-    {lsTrack,"Zone Select","Sonic Advance","Tatsuyuki Maeda, Yutaka Minobe, Teruhiko Nakagawa",true,false},
-    {hoverSFX,"Menu Hover","Game","TheWindowsPro98",false,true},
-    {confSFX,"Menu Select","Game","TheWindowsPro98",false,true}
+    {&testTrack,"Test Track","Game","TheWindowsPro98",true,false},
+    {&lvlClearTrack,"Act Complete","Game","TheWindowsPro98",false,false},
+    {&titleTrack,"Character Select","Sonic Advance","Tatsuyuki Maeda, Yutaka Minobe, Teruhiko Nakagawa",true,false},
+    {&lfTrack,"Angel Island Zone (Act 2)","Sonic the Hedgehog 3","Unknown Artist",true,false},
+    {&lsTrack,"Zone Select","Sonic Advance","Tatsuyuki Maeda, Yutaka Minobe, Teruhiko Nakagawa",true,false},
+    {&hoverSFX,"Menu Hover","Game","TheWindowsPro98",false,true},
+    {&confSFX,"Menu Select","Game","TheWindowsPro98",false,true}
 };
 
 static void jukeboxBack()
@@ -123,7 +123,7 @@ void jukebox()
             }
             case sf::Event::KeyPressed:
             {
-                if (!window.hasFocus() or fadeRect.getFillColor().a != 0)
+                if (!window.hasFocus() || fadeRect.getFillColor().a != 0)
                 {
                     break;
                 }
@@ -155,13 +155,13 @@ void jukebox()
                 {
                     if (!musHdr[*menuIndex].isSFX)
                     {
-                        music.openFromFile(musHdr[*menuIndex].songPath);
+                        music.openFromFile(*musHdr[*menuIndex].songPath);
                         music.setLoop(musHdr[*menuIndex].loop);
                         music.play();
                     }
                     else
                     {
-                        sb.loadFromFile(musHdr[*menuIndex].songPath);
+                        sb.loadFromFile(*musHdr[*menuIndex].songPath);
                         snd.setBuffer(sb);
                         snd.setLoop(musHdr[*menuIndex].loop);
                         snd.play();

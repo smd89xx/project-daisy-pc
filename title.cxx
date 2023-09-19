@@ -3,7 +3,7 @@
 const types::u8 titleX = 6;
 const types::u8 titleY = 22;
 const types::u8 titleOptAmnt = 4;
-const types::legacyString comingSoonText = "Feature will be added soon!\n";
+const std::string comingSoonText = "Feature will be added soon!";
 
 const structs::Option titleMenu[] = 
 {
@@ -41,6 +41,11 @@ static void selectMenuTitle()
     }
     switch (*menuIndex)
     {
+        case 0:
+        {
+            title();
+            break;
+        }
         case 3:
         {
             prefsScreen();
@@ -48,9 +53,8 @@ static void selectMenuTitle()
         }
         default:
         {
-            fprintf(stderr,"%s",comingSoonText);
-            
-            exit(1);
+            std::cerr << comingSoonText << std::endl;
+            exit(EXIT_FAILURE);
             break;
         }
     }
@@ -105,7 +109,7 @@ void title()
             }
             case sf::Event::KeyPressed:
             {
-                if (!window.hasFocus() or fadeRect.getFillColor().a != 0)
+                if (!window.hasFocus() || fadeRect.getFillColor().a != 0)
                 {
                     break;
                 }

@@ -113,7 +113,7 @@ static void selectMenuPrefs()
         }
         default:
         {
-            fprintf(stderr,"%s",comingSoonText);
+            std::cerr << comingSoonText << std::endl;
             exit(EXIT_FAILURE);
             break;
         }
@@ -154,7 +154,7 @@ void prefsScreen()
                 }
                 case sf::Event::KeyPressed:
                 {
-                    if (!window.hasFocus() or fadeRect.getFillColor().a != 0)
+                    if (!window.hasFocus() || fadeRect.getFillColor().a != 0)
                     {
                         break;
                     }

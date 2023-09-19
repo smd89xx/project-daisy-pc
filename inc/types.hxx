@@ -14,15 +14,13 @@ namespace types
     typedef unsigned long long u64;
     typedef signed long long s64;
 
-    typedef char* legacyString;
-
     struct varSizes
     {    enum sizes
         {
-            var8Bit,
-            var16Bit,
-            var32Bit,
-            var64Bit,
+            var8Bit = 1,
+            var16Bit = 2,
+            var32Bit = 4,
+            var64Bit = 8,
         };
     };
 }

@@ -60,7 +60,7 @@ void drawMenu(const structs::Option* option, types::u8 length)
     }
 }
 
-/// @brief Fades music in or out.
+/// @brief Fades music in || out.
 /// @param direction False = in, True = out
 /// @param speed Smaller = slower
 void fadeMusic(bool direction, float speed)

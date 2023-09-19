@@ -15,7 +15,7 @@ namespace structs
     class SndMData
     {
         public:
-            std::string songPath;
+            const std::string* songPath;
             std::string songTitle;
             std::string songAlbum;
             std::string songArtist;

@@ -2,6 +2,6 @@
 
 #include "includes.hxx"
 
-extern const types::legacyString comingSoonText;
+extern const std::string comingSoonText;
 
 void title();
