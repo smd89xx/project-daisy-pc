@@ -1,6 +1,6 @@
 #include "inc/includes.hxx"
 
-types::u8* menuIndex;
+types::u8 menuIndex;
 const types::u8 prefsX = 10;
 const types::u8 prefsY = 12;
 const types::u8 diffXDelta = 9;
@@ -40,7 +40,7 @@ static void updConfOutline()
 
 static void selectMenuPrefs()
 {   
-    if (*menuIndex >= 6)
+    if (menuIndex >= 6)
     {   
         float volume = music.getVolume();
         while (window.isOpen())
@@ -53,8 +53,8 @@ static void selectMenuPrefs()
             }
             sf::Event e;
             volume = music.getVolume();
-            fadeMusic(true,volFadeSpeed);
-            screenFade(volFadeSpeed,false);
+            fadeMusic(true,volFadeSpeed,volMin);
+            screenFade(volFadeSpeed,false,fadeDark);
             window.draw(fadeRect);
             window.display();
             while (window.pollEvent(e))
@@ -67,7 +67,7 @@ static void selectMenuPrefs()
             }
         }
     }
-    switch (*menuIndex)
+    switch (menuIndex)
     {
         case 0:
         {
@@ -101,13 +101,13 @@ static void selectMenuPrefs()
         }
         case 6:
         {
-            *menuIndex = 0;
+            menuIndex = 0;
             jukebox();
             break;
         }
         case 7:
         {
-            *menuIndex = 3;
+            menuIndex = 3;
             title();
             break;
         }
@@ -123,7 +123,7 @@ void prefsScreen()
 {
     music.openFromFile(lsTrack);
     music.play();
-    *menuIndex = 0;
+    menuIndex = 0;
     fadeRect.setFillColor(sf::Color::Black);
     sf::Text diffStr(templateText);
     diffStr.setString("Difficulty:");
@@ -134,7 +134,7 @@ void prefsScreen()
     while (window.isOpen())
     {
         sf::Event e;
-        screenFade(volFadeSpeed,true);
+        screenFade(volFadeSpeed,true,fadeLight);
         window.clear(sf::Color::Black);
         window.draw(diffStr);
         window.draw(plrStr);
@@ -160,25 +160,25 @@ void prefsScreen()
                     if (e.key.scancode == sf::Keyboard::Scan::Left)
                     {
                         sndHvr.play();
-                        if (*menuIndex == 0)
+                        if (menuIndex == 0)
                         {
-                            *menuIndex = prefsMenuAmnt-1;
+                            menuIndex = prefsMenuAmnt-1;
                         }
                         else
                         {
-                            --*menuIndex;
+                            menuIndex--;
                         }
                     }
                     else if (e.key.scancode == sf::Keyboard::Scan::Right)
                     {
                         sndHvr.play();
-                        if (*menuIndex < prefsMenuAmnt-1)
+                        if (menuIndex < prefsMenuAmnt-1)
                         {
-                            ++*menuIndex;
+                            menuIndex++;
                         }
                         else
                         {
-                            *menuIndex = 0;
+                            menuIndex = 0;
                         }
                     }
                     if (e.key.scancode == sf::Keyboard::Scan::Enter)
@@ -189,7 +189,7 @@ void prefsScreen()
                     else if (e.key.scancode == sf::Keyboard::Scan::Escape)
                     {
                         sndBack.play();
-                        *menuIndex = 7;
+                        menuIndex = 7;
                         selectMenuPrefs();
                     }
                     break;

@@ -26,8 +26,8 @@ static void selectMenuTitle()
         }
         sf::Event e;
         volume = music.getVolume();
-        fadeMusic(true,volFadeSpeed);
-        screenFade(volFadeSpeed,false);
+        fadeMusic(true,volFadeSpeed,volMin);
+        screenFade(volFadeSpeed,false,fadeDark);
         window.draw(fadeRect);
         window.display();
         while (window.pollEvent(e))
@@ -39,7 +39,7 @@ static void selectMenuTitle()
             }
         }
     }
-    switch (*menuIndex)
+    switch (menuIndex)
     {
         case 0:
         {
@@ -89,7 +89,7 @@ void title()
     while (window.isOpen())
     {
         sf::Event event;
-        screenFade(volFadeSpeed,true);
+        screenFade(volFadeSpeed,true,fadeLight);
         window.clear(sf::Color::Black);
         window.draw(copyInfo);
         window.draw(versionText);
@@ -115,25 +115,25 @@ void title()
                 if (event.key.scancode == sf::Keyboard::Scan::Left)
                 {
                     sndHvr.play();
-                    if (*menuIndex == 0)
+                    if (menuIndex == 0)
                     {
-                        *menuIndex = titleOptAmnt-1;
+                        menuIndex = titleOptAmnt-1;
                     }
                     else
                     {
-                        --*menuIndex;
+                        menuIndex--;
                     }
                 }
                 else if (event.key.scancode == sf::Keyboard::Scan::Right)
                 {
                     sndHvr.play();
-                    if (*menuIndex >= titleOptAmnt-1)
+                    if (menuIndex >= titleOptAmnt-1)
                     {
-                        *menuIndex = 0;
+                        menuIndex = 0;
                     }
                     else
                     {
-                        ++*menuIndex;
+                        menuIndex++;
                     }
                 }
                 if (event.key.scancode == sf::Keyboard::Scan::Enter)

@@ -35,8 +35,8 @@ static void jukeboxBack()
         }
         sf::Event e;
         volume = music.getVolume();
-        fadeMusic(true,volFadeSpeed);
-        screenFade(volFadeSpeed,false);
+        fadeMusic(true,volFadeSpeed,volMin);
+        screenFade(volFadeSpeed,false,fadeDark);
         window.draw(fadeRect);
         window.display();
         while (window.pollEvent(e))
@@ -77,14 +77,14 @@ void jukebox()
     while(window.isOpen())
     {
         sf::Event e;
-        songLabel.setString("Title: " + musHdr[*menuIndex].songTitle);
-        songAlbumLabel.setString("Album: " + musHdr[*menuIndex].songAlbum);
-        songArtistLabel.setString("Artist(s): " + musHdr[*menuIndex].songArtist);
-        songLoopLabel.setString("Will Audio Loop: " + boolStrings[musHdr[*menuIndex].loop]);
-        songTypeLabel.setString("Audio Type: " + musType[musHdr[*menuIndex].isSFX]);
+        songLabel.setString("Title: " + musHdr[menuIndex].songTitle);
+        songAlbumLabel.setString("Album: " + musHdr[menuIndex].songAlbum);
+        songArtistLabel.setString("Artist(s): " + musHdr[menuIndex].songArtist);
+        songLoopLabel.setString("Will Audio Loop: " + boolStrings[musHdr[menuIndex].loop]);
+        songTypeLabel.setString("Audio Type: " + musType[musHdr[menuIndex].isSFX]);
         songTimeElapsed.setString("Elapsed Time: " + std::to_string(music.getPlayingOffset().asSeconds()) + timeMetric);
         songTimeTotal.setString("Total Time: " + std::to_string(music.getDuration().asSeconds()) + timeMetric);
-        screenFade(volFadeSpeed,true);
+        screenFade(volFadeSpeed,true,fadeLight);
         window.clear();
         window.draw(songLabel);
         window.draw(songAlbumLabel);
@@ -113,40 +113,40 @@ void jukebox()
                 if (e.key.scancode == sf::Keyboard::Scan::Left)
                 {
                     sndHvr.play();
-                    if (*menuIndex == 0)
+                    if (menuIndex == 0)
                     {
-                        *menuIndex = sndAmnt-1;
+                        menuIndex = sndAmnt-1;
                     }
                     else
                     {
-                        --*menuIndex;
+                        menuIndex--;
                     }
                 }
                 else if (e.key.scancode == sf::Keyboard::Scan::Right)
                 {
                     sndHvr.play();
-                    if (*menuIndex == sndAmnt-1)
+                    if (menuIndex == sndAmnt-1)
                     {
-                        *menuIndex = 0;
+                        menuIndex = 0;
                     }
                     else
                     {
-                        ++*menuIndex;
+                        menuIndex++;
                     }
                 }
                 if (e.key.scancode == sf::Keyboard::Scan::Enter)
                 {
-                    if (!musHdr[*menuIndex].isSFX)
+                    if (!musHdr[menuIndex].isSFX)
                     {
-                        music.openFromFile(*musHdr[*menuIndex].songPath);
-                        music.setLoop(musHdr[*menuIndex].loop);
+                        music.openFromFile(*musHdr[menuIndex].songPath);
+                        music.setLoop(musHdr[menuIndex].loop);
                         music.play();
                     }
                     else
                     {
-                        sb.loadFromFile(*musHdr[*menuIndex].songPath);
+                        sb.loadFromFile(*musHdr[menuIndex].songPath);
                         snd.setBuffer(sb);
-                        snd.setLoop(musHdr[*menuIndex].loop);
+                        snd.setLoop(musHdr[menuIndex].loop);
                         snd.play();
                     }
                 }

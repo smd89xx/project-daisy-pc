@@ -15,27 +15,32 @@ sf::Text templateText;
 const float volFadeSpeed = 1.75;
 const float scrnFadeSpeed = 2;
 const sf::Color playerColors[] = {sf::Color(0xAA22EEFF),sf::Color(0x00CC66FF)};
+const types::u8 volMin = 0;
+const types::u8 volMax = 100;
+const types::u8 fadeDark = 0xFF;
+const types::u8 fadeLight = 0x00;
 
 /// @brief Fades the screen in or out.
 /// @param speed Speed of the fade. Bigger value = faster fade.
 /// @param direction Direction of the fade. True for in, false for out.
-void screenFade(float speed, bool direction)
+/// @param fadeTarget Alpha value (0 - 255) that the fade routine stops at.
+void screenFade(float speed, bool direction, float fadeTarget)
 {
     float alpha = fadeRect.getFillColor().a;
     if (!direction)
     {
         alpha += speed;
-        if (alpha >= 255)
+        if (alpha >= fadeTarget)
         {
-            alpha = 255;
+            alpha = fadeTarget;
         }
     }
     else
     {
         alpha -= speed*3;
-        if (alpha <= 0)
+        if (alpha <= fadeTarget)
         {
-            alpha = 0;
+            alpha = fadeTarget;
         }
     }
     fadeRect.setFillColor(sf::Color(0,0,0,alpha));
@@ -54,8 +59,8 @@ void drawMenu(const structs::Option* option, types::u8 length)
         optionLabel.setPosition(pixelToTile(o.x),pixelToTile(o.y));
         window.draw(optionLabel);
         sf::Text selectedLabel(templateText);
-        selectedLabel.setString(option[*menuIndex].label);
-        selectedLabel.setPosition(pixelToTile(option[*menuIndex].x),pixelToTile(option[*menuIndex].y));
+        selectedLabel.setString(option[menuIndex].label);
+        selectedLabel.setPosition(pixelToTile(option[menuIndex].x),pixelToTile(option[menuIndex].y));
         selectedLabel.setOutlineThickness(3.5);
         selectedLabel.setOutlineColor(playerColors[player]);
         window.draw(selectedLabel);
@@ -65,23 +70,24 @@ void drawMenu(const structs::Option* option, types::u8 length)
 /// @brief Fades music in or out.
 /// @param direction False = in, True = out
 /// @param speed Smaller = slower
-void fadeMusic(bool direction, float speed)
+/// @param targetVolume The volume that the function stops at.
+void fadeMusic(bool direction, float speed, float targetVolume)
 {
     float volume = music.getVolume();
     if (direction)
     {
         volume -= speed;
-        if (volume <= 0)
+        if (volume <= targetVolume)
         {
-            volume = 0;
+            volume = targetVolume;
         }
     }
     else
     {
         volume += speed;
-        if (volume >= 100)
+        if (volume >= targetVolume)
         {
-            volume = 100;
+            volume = targetVolume;
         }
     }
     music.setVolume(volume);
