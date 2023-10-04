@@ -11,10 +11,9 @@ int main(int argc, char** argv)
     sf::Image icon;
     if (!icon.loadFromFile(favicon))
     {
-        fprintf(stderr,"Assets not found.");
-        exit(1);
+        printerr(missingAssetsErr);
     }
-    window.setIcon(16,16,icon.getPixelsPtr());
+    window.setIcon(icon.getSize().x,icon.getSize().y,icon.getPixelsPtr());
     font.loadFromFile(blazeTTF);
     font.setSmooth(false);
     window.setFramerateLimit(60);
@@ -25,9 +24,12 @@ int main(int argc, char** argv)
     sndHvr.setBuffer(sbHvr);
     sbCnf.loadFromFile(confSFX);
     sndCnf.setBuffer(sbCnf);
+    sbBack.loadFromFile(backSFX);
+    sndBack.setBuffer(sbBack);
     templateText.setFont(font);
     templateText.setCharacterSize(fontSize);
     templateText.setString("Default string.");
+    templateText.setOutlineThickness(3.5);
     title();
     return 0;
 }

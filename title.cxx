@@ -15,7 +15,7 @@ const structs::Option titleMenu[] =
 
 static void selectMenuTitle()
 {
-    float volume;
+    float volume = music.getVolume();
     while (window.isOpen())
     {
         if (volume == 0)
@@ -43,7 +43,7 @@ static void selectMenuTitle()
     {
         case 0:
         {
-            title();
+            gameInit();
             break;
         }
         case 3:
@@ -53,8 +53,7 @@ static void selectMenuTitle()
         }
         default:
         {
-            std::cerr << comingSoonText << std::endl;
-            exit(EXIT_FAILURE);
+            printerr(missingFuncErr);
             break;
         }
     }
@@ -90,7 +89,7 @@ void title()
     while (window.isOpen())
     {
         sf::Event event;
-        screenFade(volFadeSpeed*3,true);
+        screenFade(volFadeSpeed,true);
         window.clear(sf::Color::Black);
         window.draw(copyInfo);
         window.draw(versionText);
@@ -122,7 +121,7 @@ void title()
                     }
                     else
                     {
-                        (*menuIndex)--;
+                        --*menuIndex;
                     }
                 }
                 else if (event.key.scancode == sf::Keyboard::Scan::Right)
@@ -134,7 +133,7 @@ void title()
                     }
                     else
                     {
-                        (*menuIndex)++;
+                        ++*menuIndex;
                     }
                 }
                 if (event.key.scancode == sf::Keyboard::Scan::Enter)

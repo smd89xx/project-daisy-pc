@@ -1,6 +1,6 @@
 #include "inc/includes.hxx"
 
-const types::u8 sndAmnt = 7;
+const types::u8 sndAmnt = 8;
 const float musX = 0;
 const float musY = 0;
 const float musTitleXDelta = 5;
@@ -8,21 +8,23 @@ const float musAlbumXDelta = 5.5;
 const float musArtistXDelta = 8;
 const float musLoopXDelta = 11.65;
 const float musTypeXDelta = 9.25;
-const float musDurationXDelta = 12.5;
+const float musDurationXDelta = 11;
+const float musTotalXDelta = 9.35;
 const structs::SndMData musHdr[] = 
 {
     {&testTrack,"Test Track","Game","TheWindowsPro98",true,false},
-    {&lvlClearTrack,"Act Complete","Game","TheWindowsPro98",false,false},
+    {&lvlClearTrack,"Act Complete","Game","Jun Senoue",false,false},
     {&titleTrack,"Character Select","Sonic Advance","Tatsuyuki Maeda, Yutaka Minobe, Teruhiko Nakagawa",true,false},
     {&lfTrack,"Angel Island Zone (Act 2)","Sonic the Hedgehog 3","Unknown Artist",true,false},
     {&lsTrack,"Zone Select","Sonic Advance","Tatsuyuki Maeda, Yutaka Minobe, Teruhiko Nakagawa",true,false},
     {&hoverSFX,"Menu Hover","Game","TheWindowsPro98",false,true},
-    {&confSFX,"Menu Select","Game","TheWindowsPro98",false,true}
+    {&confSFX,"Menu Select","Game","TheWindowsPro98",false,true},
+    {&backSFX,"Menu Back","Game","TheWindowsPro98",false,true}
 };
 
 static void jukeboxBack()
 {
-    float volume;
+    float volume = music.getVolume();
     while (window.isOpen())
     {
         if (volume == 0)
@@ -53,63 +55,44 @@ void jukebox()
 {
     std::string boolStrings[2] = {"No","Yes"};
     std::string musType[2] = {"Music","SFX"};
+    std::string timeMetric = " seconds";
     sf::Music tmpMus;
     fadeRect.setFillColor(sf::Color::Black);
-    sf::Text songDrawable(templateText);
-    songDrawable.setPosition(pixelToTile(musX+musTitleXDelta),pixelToTile(musY));
-    sf::Text songAlbumDrawable(templateText);
-    songAlbumDrawable.setPosition(pixelToTile(musX+musAlbumXDelta),pixelToTile(musY+1));
-    sf::Text songArtistDrawable(templateText);
-    songArtistDrawable.setPosition(pixelToTile(musX+musArtistXDelta),pixelToTile(musY+2));
     sf::Text songLabel(templateText);
-    songLabel.setString("Title:");
     songLabel.setPosition(pixelToTile(musX),pixelToTile(musY));
     sf::Text songAlbumLabel(templateText);
-    songAlbumLabel.setString("Album:");
     songAlbumLabel.setPosition(pixelToTile(musX),pixelToTile(musY+1));
     sf::Text songArtistLabel(templateText);
-    songArtistLabel.setString("Artist(s):");
     songArtistLabel.setPosition(pixelToTile(musX),pixelToTile(musY+2));
-    sf::Text songLoopDrawable(templateText);
-    songLoopDrawable.setPosition(pixelToTile(musX+musLoopXDelta),pixelToTile(musY+4));
     sf::Text songLoopLabel(templateText);
-    songLoopLabel.setString("Will Audio Loop:");
     songLoopLabel.setPosition(pixelToTile(musX),pixelToTile(musY+4));
-    sf::Text songTypeDrawable(templateText);
-    songTypeDrawable.setPosition(pixelToTile(musX+musTypeXDelta),pixelToTile(musY+5));
     sf::Text songTypeLabel(templateText);
-    songTypeLabel.setString("Audio Type:");
     songTypeLabel.setPosition(pixelToTile(musX),pixelToTile(musY+5));
-    sf::Text songDurationDrawable(templateText);
-    songDurationDrawable.setPosition(pixelToTile(musX+musDurationXDelta),pixelToTile(musY+7));
-    sf::Text songDurationLabel(templateText);
-    songDurationLabel.setString("Audio Duration:");
-    songDurationLabel.setPosition(pixelToTile(musX),pixelToTile(musY+7));
+    sf::Text songTimeElapsed(templateText);
+    songTimeElapsed.setPosition(pixelToTile(musX),pixelToTile(musY+7));
+    sf::Text songTimeTotal(templateText);
+    songTimeTotal.setPosition(pixelToTile(musX),pixelToTile(musY+8));
     sf::SoundBuffer sb;
     sf::Sound snd;
     while(window.isOpen())
     {
         sf::Event e;
-        songDrawable.setString(musHdr[*menuIndex].songTitle);
-        songAlbumDrawable.setString(musHdr[*menuIndex].songAlbum);
-        songArtistDrawable.setString(musHdr[*menuIndex].songArtist);
-        songLoopDrawable.setString(boolStrings[musHdr[*menuIndex].loop]);
-        songTypeDrawable.setString(musType[musHdr[*menuIndex].isSFX]);
-        songDurationDrawable.setString(std::to_string(music.getPlayingOffset().asSeconds()) + "/" + std::to_string(music.getDuration().asSeconds()) + " seconds");
-        screenFade(volFadeSpeed*3,true);
+        songLabel.setString("Title: " + musHdr[*menuIndex].songTitle);
+        songAlbumLabel.setString("Album: " + musHdr[*menuIndex].songAlbum);
+        songArtistLabel.setString("Artist(s): " + musHdr[*menuIndex].songArtist);
+        songLoopLabel.setString("Will Audio Loop: " + boolStrings[musHdr[*menuIndex].loop]);
+        songTypeLabel.setString("Audio Type: " + musType[musHdr[*menuIndex].isSFX]);
+        songTimeElapsed.setString("Elapsed Time: " + std::to_string(music.getPlayingOffset().asSeconds()) + timeMetric);
+        songTimeTotal.setString("Total Time: " + std::to_string(music.getDuration().asSeconds()) + timeMetric);
+        screenFade(volFadeSpeed,true);
         window.clear();
-        window.draw(songDrawable);
-        window.draw(songAlbumDrawable);
-        window.draw(songArtistDrawable);
         window.draw(songLabel);
         window.draw(songAlbumLabel);
         window.draw(songArtistLabel);
-        window.draw(songLoopDrawable);
         window.draw(songLoopLabel);
-        window.draw(songTypeDrawable);
         window.draw(songTypeLabel);
-        window.draw(songDurationDrawable);
-        window.draw(songDurationLabel);
+        window.draw(songTimeElapsed);
+        window.draw(songTimeTotal);
         window.draw(fadeRect);
         window.display();
         while(window.pollEvent(e))
@@ -136,7 +119,7 @@ void jukebox()
                     }
                     else
                     {
-                        (*menuIndex)--;
+                        --*menuIndex;
                     }
                 }
                 else if (e.key.scancode == sf::Keyboard::Scan::Right)
@@ -148,7 +131,7 @@ void jukebox()
                     }
                     else
                     {
-                        (*menuIndex)++;
+                        ++*menuIndex;
                     }
                 }
                 if (e.key.scancode == sf::Keyboard::Scan::Enter)
@@ -180,7 +163,7 @@ void jukebox()
                 }
                 else if (e.key.scancode == sf::Keyboard::Scan::Escape)
                 {
-                    sndCnf.play();
+                    sndBack.play();
                     jukeboxBack();
                 }
                 break;

@@ -9,6 +9,8 @@ sf::SoundBuffer sbHvr;
 sf::Sound sndHvr;
 sf::SoundBuffer sbCnf;
 sf::Sound sndCnf;
+sf::SoundBuffer sbBack;
+sf::Sound sndBack;
 sf::Text templateText;
 const float volFadeSpeed = 1.75;
 const float scrnFadeSpeed = 2;
@@ -30,7 +32,7 @@ void screenFade(float speed, bool direction)
     }
     else
     {
-        alpha -= speed;
+        alpha -= speed*3;
         if (alpha <= 0)
         {
             alpha = 0;
@@ -60,7 +62,7 @@ void drawMenu(const structs::Option* option, types::u8 length)
     }
 }
 
-/// @brief Fades music in || out.
+/// @brief Fades music in or out.
 /// @param direction False = in, True = out
 /// @param speed Smaller = slower
 void fadeMusic(bool direction, float speed)
@@ -91,4 +93,13 @@ void fadeMusic(bool direction, float speed)
 float pixelToTile(float pos)
 {
     return pos * fontSize;
+}
+
+void printerr(types::u8 error)
+{
+    std::string errorMsgs[] = {"Generic error.","Feature (currently) unimplemented.","Level ID is invalid.","Assets are missing."};
+    std::cerr << "The game has crashed!" << std::endl;
+    std::cerr << "Error Code: " << std::showbase << std::hex << (int)error << " - ";
+    std::cerr << errorMsgs[error] << std::endl;
+    exit(1);
 }

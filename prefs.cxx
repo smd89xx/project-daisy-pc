@@ -42,7 +42,7 @@ static void selectMenuPrefs()
 {   
     if (*menuIndex >= 6)
     {   
-        float volume;
+        float volume = music.getVolume();
         while (window.isOpen())
         {
             if (volume == 0)
@@ -113,8 +113,7 @@ static void selectMenuPrefs()
         }
         default:
         {
-            std::cerr << comingSoonText << std::endl;
-            exit(EXIT_FAILURE);
+            printerr(missingFuncErr);
             break;
         }
     }
@@ -135,12 +134,12 @@ void prefsScreen()
     while (window.isOpen())
     {
         sf::Event e;
-        screenFade(volFadeSpeed*3,true);
+        screenFade(volFadeSpeed,true);
         window.clear(sf::Color::Black);
         window.draw(diffStr);
         window.draw(plrStr);
+        drawMenu(prefsMenu, prefsMenuAmnt);
         updConfOutline();
-        drawMenu(prefsMenu,prefsMenuAmnt);
         window.draw(fadeRect);
         window.display();
         while (window.pollEvent(e))
@@ -167,7 +166,7 @@ void prefsScreen()
                         }
                         else
                         {
-                            (*menuIndex)--;
+                            --*menuIndex;
                         }
                     }
                     else if (e.key.scancode == sf::Keyboard::Scan::Right)
@@ -175,7 +174,7 @@ void prefsScreen()
                         sndHvr.play();
                         if (*menuIndex < prefsMenuAmnt-1)
                         {
-                            (*menuIndex)++;
+                            ++*menuIndex;
                         }
                         else
                         {
@@ -189,7 +188,7 @@ void prefsScreen()
                     }
                     else if (e.key.scancode == sf::Keyboard::Scan::Escape)
                     {
-                        sndCnf.play();
+                        sndBack.play();
                         *menuIndex = 7;
                         selectMenuPrefs();
                     }
