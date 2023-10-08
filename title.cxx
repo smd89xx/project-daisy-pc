@@ -77,13 +77,9 @@ void title()
     versionText.setString(versionCombined);
     versionText.setPosition(pixelToTile(6.75),pixelToTile(6));
     sf::Texture titleTexture;
-    sf::Image titlePixels;
-    titlePixels.loadFromFile(titleImg);
-    titleTexture.loadFromFile(titleImg,sf::IntRect(0,0,960,144));
-    titleTexture.update(titlePixels);
+    titleTexture.loadFromFile(titleImg);
     titleTexture.setSmooth(true);
-    sf::Sprite titleSprite;
-    titleSprite.setTexture(titleTexture);
+    sf::Sprite titleSprite(titleTexture);
     titleSprite.setPosition(pixelToTile(6.75),0);
     float volume = 100;
     while (window.isOpen())

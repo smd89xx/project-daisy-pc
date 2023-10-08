@@ -15,3 +15,4 @@ const std::string daisyTTF = "res/fonts/daisy.ttf";
 const std::string backSFX = "res/sfx/back.ogg";
 const std::string testLvlBG = "res/maps/test_bg.png";
 const std::string testLvlFG = "res/maps/test_fg.png";
+const std::string stephSpr = "res/spr/stephanie.png";

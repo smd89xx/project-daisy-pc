@@ -17,3 +17,4 @@ extern const std::string daisyTTF;
 extern const std::string backSFX;
 extern const std::string testLvlBG;
 extern const std::string testLvlFG;
+extern const std::string stephSpr;

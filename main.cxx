@@ -17,7 +17,7 @@ int main(int argc, char** argv)
     font.loadFromFile(blazeTTF);
     font.setSmooth(false);
     window.setFramerateLimit(60);
-    fadeRect.setSize(sf::Vector2f(1280,720));
+    fadeRect.setSize(sf::Vector2f(window.getSize()));
     fadeRect.setFillColor(sf::Color::Black);
     sbHvr.loadFromFile(hoverSFX);
     sndHvr.setBuffer(sbHvr);
@@ -26,9 +26,9 @@ int main(int argc, char** argv)
     sbBack.loadFromFile(backSFX);
     sndBack.setBuffer(sbBack);
     templateText.setFont(font);
-    templateText.setCharacterSize(fontSize);
+    templateText.setCharacterSize(fontSize * scaleFactor);
     templateText.setString("Default string.");
-    templateText.setOutlineThickness(3.5);
+    templateText.setOutlineThickness((3.5 / 3) * scaleFactor);
     title();
     return 0;
 }

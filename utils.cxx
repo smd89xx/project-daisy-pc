@@ -4,7 +4,7 @@ sf::RenderWindow window(sf::VideoMode(1280, 720),"",sf::Style::Close);
 sf::Font font;
 sf::Music music;
 sf::RectangleShape fadeRect;
-const types::u8 fontSize = 24;
+const types::u8 fontSize = 8;
 sf::SoundBuffer sbHvr;
 sf::Sound sndHvr;
 sf::SoundBuffer sbCnf;
@@ -19,6 +19,7 @@ const types::u8 volMin = 0;
 const types::u8 volMax = 100;
 const types::u8 fadeDark = 0xFF;
 const types::u8 fadeLight = 0x00;
+types::u8 scaleFactor = 3;
 
 /// @brief Fades the screen in or out.
 /// @param speed Speed of the fade. Bigger value = faster fade.
@@ -98,14 +99,14 @@ void fadeMusic(bool direction, float speed, float targetVolume)
 /// @return Position in tiles
 float pixelToTile(float pos)
 {
-    return pos * fontSize;
+    return pos * (fontSize * scaleFactor);
 }
 
-void printerr(types::u8 error)
+void printerr(int error)
 {
     std::string errorMsgs[] = {"Generic error.","Feature (currently) unimplemented.","Level ID is invalid.","Assets are missing."};
-    std::cerr << "The game has crashed!" << std::endl;
-    std::cerr << "Error Code: " << std::showbase << std::hex << (int)error << " - ";
+    std::cerr << "ur game died :(" << std::endl;
+    std::cerr << "Cause of Death: " << std::showbase << std::hex << error << " - ";
     std::cerr << errorMsgs[error] << std::endl;
     exit(1);
 }

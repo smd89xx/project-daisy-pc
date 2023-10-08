@@ -10,11 +10,11 @@ float* cam_x;
 float* cam_y;
 const sf::Vector2f mapSizes[] = 
 {
-    {3840,2160},
+    {1280,720},
 };
 bool* isPaused;
-const types::u8 pauseX = 20;
-const types::u8 pauseY = 13;
+const types::u8 pauseX = 19;
+const types::u8 pauseY = 12;
 const types::u8 pauseOptsAmnt = 3;
 const structs::Option pauseMenu[] = 
 {
@@ -22,33 +22,62 @@ const structs::Option pauseMenu[] =
     {pauseX,pauseY+2,"Save and Exit"},
     {pauseX,pauseY+4,"Exit Without Saving"}
 };
+sf::Texture* playerTexture;
+sf::Sprite* playerSprite;
+float* player_x;
+float* player_y;
+float* velocity_x;
+float* velocity_y;
+float* maxSpeed;
+
+enum cameraBoundaries {leftCamBnd = 144, rightCamBnd = 144, topCamBnd = 104, bottomCamBnd = 104};
 
 static void camPos()
 {
+    sf::Vector2f rectSize(lvlBG->getSize());
+    float px_scrn = *player_x - *cam_x;
+    float py_scrn = *player_y - *cam_y;
+    if (px_scrn > rightCamBnd * scaleFactor)
+    {
+        *cam_x = (*player_x - rightCamBnd);
+    }
+    else if (px_scrn < leftCamBnd * scaleFactor)
+    {
+        *cam_x = (*player_x - leftCamBnd);
+    }
+    if (py_scrn > bottomCamBnd * scaleFactor)
+    {
+        *cam_y = (*player_y - bottomCamBnd);
+    }
+    else if (py_scrn < topCamBnd * scaleFactor)
+    {
+        *cam_y = (*player_y - topCamBnd);
+    }
     if (*cam_x < 0)
     {
         *cam_x = 0;
     }
-    else if (*cam_x > mapSizes[level].x - window.getSize().x)
+    else if (*cam_x > (rectSize.x - window.getSize().x) / scaleFactor)
     {
-        *cam_x = mapSizes[level].x - window.getSize().x;
+        *cam_x = (rectSize.x - window.getSize().x) / scaleFactor;
     }
     if (*cam_y < 0)
     {
         *cam_y = 0;
     }
-    else if (*cam_y > mapSizes[level].y - window.getSize().y)
+    else if (*cam_y > (rectSize.y - window.getSize().y) / scaleFactor)
     {
-        *cam_y = mapSizes[level].y - window.getSize().y;
+        *cam_y = (rectSize.y - window.getSize().y) / scaleFactor;
     }
-    lvlFG->setPosition(sf::Vector2f(-*cam_x,-*cam_y));
-    lvlBG->setPosition(sf::Vector2f(-*cam_x/2,-*cam_y/2));
+    lvlFG->setPosition(sf::Vector2f(-*cam_x * scaleFactor,-*cam_y * scaleFactor));
+    lvlBG->setPosition(sf::Vector2f((-*cam_x * scaleFactor)/2,(-*cam_y * scaleFactor)/2));
 }
 
 static const types::u8* loadMap()
 {
-    lvlPxBG->setSmooth(true);
-    lvlPxFG->setSmooth(true);
+    sf::Vector2f scaledMapSize(mapSizes[level]);
+    scaledMapSize.x *= scaleFactor;
+    scaledMapSize.y *= scaleFactor;
     switch (level)
     {
     case 0:
@@ -57,11 +86,12 @@ static const types::u8* loadMap()
         lvlPxFG->loadFromFile(testLvlFG);
         lvlBG->setTexture(lvlPxBG);
         lvlFG->setTexture(lvlPxFG);
-        lvlFG->setSize(mapSizes[level]);
-        lvlBG->setSize(mapSizes[level]);
+        lvlFG->setSize(scaledMapSize);
+        lvlBG->setSize(scaledMapSize);
         music.openFromFile(lfTrack);
         music.setLoop(true);
         music.play();
+        *bgColor = sf::Color(0xFF00FFFF);
         return testLvlCollision;
         break;
     }
@@ -72,6 +102,30 @@ static const types::u8* loadMap()
         break;
     }
     }
+}
+
+static void updatePlayer()
+{
+    *player_x += *velocity_x;
+    *player_y += *velocity_y;
+    sf::Vector2f rectSize(lvlBG->getSize());
+    if (*player_x < playerSprite->getOrigin().x)
+    {
+        *player_x = playerSprite->getOrigin().x;
+    }
+    else if (*player_x > (rectSize.x - playerTexture->getSize().x) / scaleFactor)
+    {
+        *player_x = (rectSize.x - playerTexture->getSize().x) / scaleFactor;
+    }
+    if (*player_y < playerSprite->getOrigin().y)
+    {
+        *player_y = playerSprite->getOrigin().y;
+    }
+    else if (*player_y > (rectSize.y) / scaleFactor)
+    {
+        *player_y = (rectSize.y) / scaleFactor;
+    }
+    playerSprite->setPosition(sf::Vector2f((*player_x - *cam_x) * scaleFactor,(*player_y - *cam_y) * scaleFactor));
 }
 
 static void gameInputHdl_KB()
@@ -86,19 +140,29 @@ static void gameInputHdl_KB()
     bool downPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Down);
     if (leftPressed)
     {
-        *cam_x -= 2.5;
+        *velocity_x = -1.5;
+        playerSprite->setScale(-scaleFactor,scaleFactor);
     }
     else if (rightPressed)
     {
-        *cam_x += 2.5;
+        *velocity_x = 1.5;
+        playerSprite->setScale(scaleFactor,scaleFactor);
+    }
+    else
+    {
+        *velocity_x = 0;
     }
     if (upPressed)
     {
-        *cam_y -= 2.5;
+        *velocity_y = -1.5;
     }
     else if (downPressed)
     {
-        *cam_y += 2.5;
+        *velocity_y = 1.5;
+    }
+    else
+    {
+        *velocity_y = 0;
     }
 }
 
@@ -106,13 +170,40 @@ static void drawHUD()
 {
     sf::Text camXLabel(templateText);
     sf::Text camYLabel(templateText);
+    sf::Text plrXLabel(templateText);
+    sf::Text plrYLabel(templateText);
     camYLabel.setPosition(0, 27.5);
+    plrXLabel.setPosition(pixelToTile(16),0);
+    plrYLabel.setPosition(pixelToTile(16),27.5);
     std::string cxStr = std::to_string(*cam_x);
     std::string cyStr = std::to_string(*cam_y);
+    std::string pxStr = std::to_string(*player_x);
+    std::string pyStr = std::to_string(*player_y);
     camXLabel.setString("CX: " + cxStr);
     camYLabel.setString("CY: " + cyStr);
+    plrXLabel.setString("PX: " + pxStr);
+    plrYLabel.setString("PY: " + pyStr);
     window.draw(camXLabel);
     window.draw(camYLabel);
+    window.draw(plrXLabel);
+    window.draw(plrYLabel);
+}
+
+static void gameCleanup()
+{
+    delete cam_x;
+    delete cam_y;
+    delete isPaused;
+    delete bgColor;
+    delete lvlPxBG;
+    delete lvlPxFG;
+    delete playerSprite;
+    delete playerTexture;
+    delete player_x;
+    delete player_y;
+    delete velocity_x;
+    delete velocity_y;
+    delete maxSpeed;
 }
 
 static void selectMenuPause()
@@ -155,12 +246,7 @@ static void selectMenuPause()
     case 2:
     {
         menuIndex = 0;
-        delete cam_x;
-        delete cam_y;
-        delete isPaused;
-        delete bgColor;
-        delete lvlPxBG;
-        delete lvlPxFG;
+        gameCleanup();
         title();
         break;
     }
@@ -172,17 +258,41 @@ static void selectMenuPause()
     }
 }
 
+static void spawnPlayer()
+{
+    const std::string* playerTexturePath;
+    if (player)
+    {
+        playerTexturePath = &stephSpr;
+    }
+    else
+    {
+        printerr(missingFuncErr);
+    }
+    playerTexture = new sf::Texture;
+    playerTexture->loadFromFile(*playerTexturePath);
+    playerSprite = new sf::Sprite(*playerTexture);
+    playerSprite->setScale(sf::Vector2f(scaleFactor,scaleFactor));
+    playerSprite->setOrigin(sf::Vector2f(playerTexture->getSize().x/2,playerTexture->getSize().y/2));
+    player_x = new float(*cam_x);
+    player_y = new float(*cam_x);
+    velocity_x = new float(*cam_x);
+    velocity_y = new float(*cam_x);
+    maxSpeed = new float(*cam_x);
+}
+
 void gameInit()
 {
     fadeRect.setFillColor(sf::Color::Black);
     cam_x = new float(0);
-    cam_y = new float(0);
+    cam_y = new float(*cam_x);
     isPaused = new bool(false);
     bgColor = new sf::Color(0x000000FF);
     lvlPxBG = new sf::Texture;
     lvlPxFG = new sf::Texture;
     lvlBG = new sf::RectangleShape(sf::Vector2f(window.getSize()));
     lvlFG = new sf::RectangleShape(*lvlBG);
+    spawnPlayer();
     const types::u8* collisionArray = loadMap();
     while (window.isOpen())
     {
@@ -191,6 +301,7 @@ void gameInit()
         {
             gameInputHdl_KB();
             camPos();
+            updatePlayer();
             fadeMusic(false,volFadeSpeed,volMax);
             screenFade(volFadeSpeed,true,fadeLight);
         }
@@ -202,6 +313,7 @@ void gameInit()
         window.clear(*bgColor);
         window.draw(*lvlBG);
         window.draw(*lvlFG);
+        window.draw(*playerSprite);
         drawHUD();
         window.draw(fadeRect);
         if (*isPaused)
