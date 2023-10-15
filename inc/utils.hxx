@@ -21,12 +21,15 @@ extern const types::u8 volMax;
 extern const types::u8 fadeDark;
 extern const types::u8 fadeLight;
 extern types::u8 scaleFactor;
+extern sf::Event e;
+extern const types::u8 maxScale;
 enum errorCodes
 {
     genericErr,
     missingFuncErr,
     badLevelErr,
     missingAssetsErr,
+    invalidScaleErr,
 };
 
 void screenFade(float speed, bool direction, float fadeTarget);
@@ -34,3 +37,4 @@ void drawMenu(const structs::Option* option, types::u8 length);
 void fadeMusic(bool direction, float speed, float targetVolume);
 float pixelToTile(float pos);
 void printerr(int error);
+void updScreenSize();

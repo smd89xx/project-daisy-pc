@@ -18,7 +18,6 @@ int main(int argc, char** argv)
     font.setSmooth(false);
     window.setFramerateLimit(60);
     fadeRect.setSize(sf::Vector2f(window.getSize()));
-    fadeRect.setFillColor(sf::Color::Black);
     sbHvr.loadFromFile(hoverSFX);
     sndHvr.setBuffer(sbHvr);
     sbCnf.loadFromFile(confSFX);
@@ -29,6 +28,7 @@ int main(int argc, char** argv)
     templateText.setCharacterSize(fontSize * scaleFactor);
     templateText.setString("Default string.");
     templateText.setOutlineThickness((3.5 / 3) * scaleFactor);
+    updScreenSize();
     title();
     return 0;
 }

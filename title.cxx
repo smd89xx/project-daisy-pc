@@ -15,6 +15,7 @@ const structs::Option titleMenu[] =
 
 static void selectMenuTitle()
 {
+    fadeRect.setFillColor(sf::Color::White);
     float volume = music.getVolume();
     while (window.isOpen())
     {
@@ -24,11 +25,9 @@ static void selectMenuTitle()
             music.setVolume(100);
             break;
         }
-        sf::Event e;
         volume = music.getVolume();
         fadeMusic(true,volFadeSpeed,volMin);
-        screenFade(volFadeSpeed,false,fadeDark);
-        window.draw(fadeRect);
+        screenFade(volFadeSpeed,false,fadeLight);
         window.display();
         while (window.pollEvent(e))
         {
@@ -79,23 +78,24 @@ void title()
     sf::Texture titleTexture;
     titleTexture.loadFromFile(titleImg);
     titleTexture.setSmooth(true);
-    sf::Sprite titleSprite(titleTexture);
-    titleSprite.setPosition(pixelToTile(6.75),0);
+    sf::RectangleShape titleSprite(sf::Vector2f(titleTexture.getSize()));
+    titleSprite.setTexture(&titleTexture);
+    sf::Vector2f titleImgSize(320 * scaleFactor, 48 * scaleFactor);
+    titleSprite.setSize(titleImgSize);
+    titleSprite.setPosition(pixelToTile(7),0);
     float volume = 100;
     while (window.isOpen())
     {
-        sf::Event event;
-        screenFade(volFadeSpeed,true,fadeLight);
         window.clear(sf::Color::Black);
         window.draw(copyInfo);
         window.draw(versionText);
         window.draw(titleSprite);
         drawMenu(titleMenu,4);
-        window.draw(fadeRect);
+        screenFade(volFadeSpeed,true,fadeDark);
         window.display();
-        while (window.pollEvent(event))
+        while (window.pollEvent(e))
         {
-            switch (event.type)
+            switch (e.type)
             {
             case sf::Event::Closed:
             {
@@ -104,11 +104,11 @@ void title()
             }
             case sf::Event::KeyPressed:
             {
-                if (!window.hasFocus() || fadeRect.getFillColor().a != 0)
+                if (!window.hasFocus())
                 {
                     break;
                 }
-                if (event.key.scancode == sf::Keyboard::Scan::Left)
+                if (e.key.scancode == sf::Keyboard::Scan::Left)
                 {
                     sndHvr.play();
                     if (menuIndex == 0)
@@ -120,7 +120,7 @@ void title()
                         menuIndex--;
                     }
                 }
-                else if (event.key.scancode == sf::Keyboard::Scan::Right)
+                else if (e.key.scancode == sf::Keyboard::Scan::Right)
                 {
                     sndHvr.play();
                     if (menuIndex >= titleOptAmnt-1)
@@ -132,7 +132,7 @@ void title()
                         menuIndex++;
                     }
                 }
-                if (event.key.scancode == sf::Keyboard::Scan::Enter)
+                if (e.key.scancode == sf::Keyboard::Scan::Enter)
                 {
                     sndCnf.play();
                     selectMenuTitle();

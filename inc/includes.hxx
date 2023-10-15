@@ -5,7 +5,6 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include <SFML/System.hpp>
-// #include <tmxlite/Map.hpp>
 #include "types.hxx"
 #include "resources.hxx"
 #include "version.hxx"

@@ -28,8 +28,6 @@ static void updConfOutline()
     sf::Text plrConf(templateText);
     plrConf.setOutlineColor(playerColors[!player]);
     diffConf.setOutlineColor(playerColors[!player]);
-    plrConf.setOutlineThickness(3.5);
-    diffConf.setOutlineThickness(3.5);
     plrConf.setString(prefsMenu[playerIndex].label);
     plrConf.setPosition(pixelToTile(prefsMenu[playerIndex].x),pixelToTile(prefsMenu[playerIndex].y));
     diffConf.setString(prefsMenu[difficulty].label);
@@ -42,6 +40,7 @@ static void selectMenuPrefs()
 {   
     if (menuIndex >= 6)
     {   
+        fadeRect.setFillColor(sf::Color::White);
         float volume = music.getVolume();
         while (window.isOpen())
         {
@@ -51,11 +50,9 @@ static void selectMenuPrefs()
                 music.setVolume(100);
                 break;
             }
-            sf::Event e;
             volume = music.getVolume();
             fadeMusic(true,volFadeSpeed,volMin);
-            screenFade(volFadeSpeed,false,fadeDark);
-            window.draw(fadeRect);
+            screenFade(volFadeSpeed,false,fadeLight);
             window.display();
             while (window.pollEvent(e))
             {
@@ -133,14 +130,12 @@ void prefsScreen()
     plrStr.setPosition(pixelToTile(prefsX+plrXDeltaGlobal),pixelToTile(prefsY+2));
     while (window.isOpen())
     {
-        sf::Event e;
-        screenFade(volFadeSpeed,true,fadeLight);
         window.clear(sf::Color::Black);
         window.draw(diffStr);
         window.draw(plrStr);
         drawMenu(prefsMenu, prefsMenuAmnt);
         updConfOutline();
-        window.draw(fadeRect);
+        screenFade(volFadeSpeed,true,fadeDark);
         window.display();
         while (window.pollEvent(e))
         {
@@ -153,7 +148,7 @@ void prefsScreen()
                 }
                 case sf::Event::KeyPressed:
                 {
-                    if (!window.hasFocus() || fadeRect.getFillColor().a != 0)
+                    if (!window.hasFocus())
                     {
                         break;
                     }
@@ -181,6 +176,40 @@ void prefsScreen()
                             menuIndex = 0;
                         }
                     }
+                    if (e.key.scancode == sf::Keyboard::Scan::Up)
+                {
+                    sndHvr.play();
+                    if (scaleFactor == 1)
+                    {
+                        scaleFactor = maxScale;
+                    }
+                    else
+                    {
+                        scaleFactor--;
+                    }
+                    plrStr.setCharacterSize(fontSize * scaleFactor);
+                    diffStr.setCharacterSize(fontSize * scaleFactor);
+                    diffStr.setPosition(pixelToTile(prefsX),pixelToTile(prefsY));
+                    plrStr.setPosition(pixelToTile(prefsX+plrXDeltaGlobal),pixelToTile(prefsY+2));
+                    updScreenSize();
+                }
+                else if (e.key.scancode == sf::Keyboard::Scan::Down)
+                {
+                    sndHvr.play();
+                    if (scaleFactor == maxScale)
+                    {
+                        scaleFactor = 1;
+                    }
+                    else
+                    {
+                        scaleFactor++;
+                    }
+                    plrStr.setCharacterSize(fontSize * scaleFactor);
+                    diffStr.setCharacterSize(fontSize * scaleFactor);
+                    diffStr.setPosition(pixelToTile(prefsX),pixelToTile(prefsY));
+                    plrStr.setPosition(pixelToTile(prefsX+plrXDeltaGlobal),pixelToTile(prefsY+2));
+                    updScreenSize();
+                }
                     if (e.key.scancode == sf::Keyboard::Scan::Enter)
                     {
                         sndCnf.play();

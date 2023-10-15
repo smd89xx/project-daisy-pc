@@ -20,6 +20,10 @@ const types::u8 volMax = 100;
 const types::u8 fadeDark = 0xFF;
 const types::u8 fadeLight = 0x00;
 types::u8 scaleFactor = 3;
+const types::u8 maxScale = 5;
+const sf::Vector2u screenSizes[] = {{427,240},{853,480},{1280,720},{1707,960},{2133,1200}};
+const std::string errorMsgs[] = {"Generic error.","Feature (currently) unimplemented.","Level ID is invalid.","Assets are missing.","Scale factor is invalid."};
+sf::Event e;
 
 /// @brief Fades the screen in or out.
 /// @param speed Speed of the fade. Bigger value = faster fade.
@@ -27,24 +31,25 @@ types::u8 scaleFactor = 3;
 /// @param fadeTarget Alpha value (0 - 255) that the fade routine stops at.
 void screenFade(float speed, bool direction, float fadeTarget)
 {
-    float alpha = fadeRect.getFillColor().a;
+    float alpha = fadeRect.getFillColor().r;
     if (!direction)
     {
-        alpha += speed;
-        if (alpha >= fadeTarget)
+        alpha -= speed/2;
+        if (alpha <= fadeTarget)
         {
             alpha = fadeTarget;
         }
     }
     else
     {
-        alpha -= speed*3;
-        if (alpha <= fadeTarget)
+        alpha += speed*3;
+        if (alpha >= fadeTarget)
         {
             alpha = fadeTarget;
         }
     }
-    fadeRect.setFillColor(sf::Color(0,0,0,alpha));
+    fadeRect.setFillColor(sf::Color(alpha,alpha,alpha,0xFF));
+    window.draw(fadeRect,sf::BlendMultiply);
 }
 
 /// @brief Renders an Option structure.
@@ -62,7 +67,6 @@ void drawMenu(const structs::Option* option, types::u8 length)
         sf::Text selectedLabel(templateText);
         selectedLabel.setString(option[menuIndex].label);
         selectedLabel.setPosition(pixelToTile(option[menuIndex].x),pixelToTile(option[menuIndex].y));
-        selectedLabel.setOutlineThickness(3.5);
         selectedLabel.setOutlineColor(playerColors[player]);
         window.draw(selectedLabel);
     }
@@ -104,9 +108,27 @@ float pixelToTile(float pos)
 
 void printerr(int error)
 {
-    std::string errorMsgs[] = {"Generic error.","Feature (currently) unimplemented.","Level ID is invalid.","Assets are missing."};
     std::cerr << "ur game died :(" << std::endl;
     std::cerr << "Cause of Death: " << std::showbase << std::hex << error << " - ";
     std::cerr << errorMsgs[error] << std::endl;
     exit(1);
+}
+
+/// @brief Changes screen and viewport scale based on the 'scaleFactor' variable.
+void updScreenSize()
+{
+    if (scaleFactor - 1 >= maxScale)
+    {
+        printerr(invalidScaleErr);
+    }
+    sf::Vector2u baseSize = screenSizes[scaleFactor-1];
+    sf::View view;
+    view.setSize(sf::Vector2f(baseSize));
+    view.setCenter(baseSize.x / 2,baseSize.y / 2);
+    window.setSize(baseSize);
+    window.setView(view);
+    fadeRect.setSize(sf::Vector2f(baseSize));
+    templateText.setCharacterSize(fontSize * scaleFactor);
+    templateText.setOutlineThickness((3.5 / 3) * scaleFactor);
+
 }

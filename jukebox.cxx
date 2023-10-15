@@ -13,7 +13,7 @@ const float musTotalXDelta = 9.35;
 const structs::SndMData musHdr[] = 
 {
     {&testTrack,"Test Track","Game","TheWindowsPro98",true,false},
-    {&lvlClearTrack,"Act Complete","Game","Jun Senoue",false,false},
+    {&lvlClearTrack,"Act Complete","Sonic the Hedgehog 3","Jun Senoue",false,false},
     {&titleTrack,"Character Select","Sonic Advance","Tatsuyuki Maeda, Yutaka Minobe, Teruhiko Nakagawa",true,false},
     {&lfTrack,"Angel Island Zone (Act 2)","Sonic the Hedgehog 3","Unknown Artist",true,false},
     {&lsTrack,"Zone Select","Sonic Advance","Tatsuyuki Maeda, Yutaka Minobe, Teruhiko Nakagawa",true,false},
@@ -24,6 +24,7 @@ const structs::SndMData musHdr[] =
 
 static void jukeboxBack()
 {
+    fadeRect.setFillColor(sf::Color::White);
     float volume = music.getVolume();
     while (window.isOpen())
     {
@@ -33,11 +34,9 @@ static void jukeboxBack()
             music.setVolume(100);
             break;
         }
-        sf::Event e;
         volume = music.getVolume();
         fadeMusic(true,volFadeSpeed,volMin);
-        screenFade(volFadeSpeed,false,fadeDark);
-        window.draw(fadeRect);
+        screenFade(volFadeSpeed,false,fadeLight);
         window.display();
         while (window.pollEvent(e))
         {
@@ -76,7 +75,6 @@ void jukebox()
     sf::Sound snd;
     while(window.isOpen())
     {
-        sf::Event e;
         songLabel.setString("Title: " + musHdr[menuIndex].songTitle);
         songAlbumLabel.setString("Album: " + musHdr[menuIndex].songAlbum);
         songArtistLabel.setString("Artist(s): " + musHdr[menuIndex].songArtist);
@@ -84,7 +82,6 @@ void jukebox()
         songTypeLabel.setString("Audio Type: " + musType[musHdr[menuIndex].isSFX]);
         songTimeElapsed.setString("Elapsed Time: " + std::to_string(music.getPlayingOffset().asSeconds()) + timeMetric);
         songTimeTotal.setString("Total Time: " + std::to_string(music.getDuration().asSeconds()) + timeMetric);
-        screenFade(volFadeSpeed,true,fadeLight);
         window.clear();
         window.draw(songLabel);
         window.draw(songAlbumLabel);
@@ -93,7 +90,7 @@ void jukebox()
         window.draw(songTypeLabel);
         window.draw(songTimeElapsed);
         window.draw(songTimeTotal);
-        window.draw(fadeRect);
+        screenFade(volFadeSpeed,true,fadeDark);
         window.display();
         while(window.pollEvent(e))
         {
@@ -106,7 +103,7 @@ void jukebox()
             }
             case sf::Event::KeyPressed:
             {
-                if (!window.hasFocus() || fadeRect.getFillColor().a != 0)
+                if (!window.hasFocus())
                 {
                     break;
                 }
