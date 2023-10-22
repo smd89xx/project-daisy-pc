@@ -130,5 +130,4 @@ void updScreenSize()
     fadeRect.setSize(sf::Vector2f(baseSize));
     templateText.setCharacterSize(fontSize * scaleFactor);
     templateText.setOutlineThickness((3.5 / 3) * scaleFactor);
-
 }

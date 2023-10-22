@@ -2,4 +2,4 @@
 
 #include "includes.hxx"
 
-extern const types::u8 testLvlCollision[];
+extern const sf::IntRect testLvlCollision[];

@@ -4,4 +4,5 @@ namespace structs
 {
     Option::~Option(){};
     SndMData::~SndMData(){};
+    Directions::~Directions(){};
 }

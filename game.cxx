@@ -4,13 +4,8 @@ sf::RectangleShape* lvlFG;
 sf::RectangleShape* lvlBG;
 sf::Texture* lvlPxBG;
 sf::Texture* lvlPxFG;
-sf::Color* bgColor;
 types::u8 level = 0;
 sf::Vector2f* cameraPositions;
-const sf::Vector2f mapSizes[] = 
-{
-    {1280,720},
-};
 bool* isPaused;
 const types::u8 pauseX = 19;
 const types::u8 pauseY = 12;
@@ -26,13 +21,21 @@ sf::Sprite* playerSprite;
 sf::Vector2f* playerPositions;
 sf::Vector2f* playerVelocities;
 float* maxSpeed;
-
+const types::u8 collisionRectAmounts[] = {5};
+std::thread* collisionThread;
+structs::Directions* playerDirection;
 enum cameraBoundaries {leftCamBnd = 144, rightCamBnd = 144, topCamBnd = 104, bottomCamBnd = 104};
+enum tileTypes {tileBlank, tileSolid, tileSlopeE, tileSlopeW, tileSpringN, tileRing, tileSpringE, tileSpringW};
 
 static void camPos()
 {
-    sf::Vector2f rectSize(lvlBG->getSize());
+    sf::Vector2f rectSize(lvlPxBG->getSize());
+    rectSize.x *= scaleFactor;
+    rectSize.y *= scaleFactor;
     sf::Vector2f playerScreenPos(playerPositions->x - cameraPositions->x, playerPositions->y - cameraPositions->y);
+    sf::Vector2i bgCamPos(*cameraPositions);
+    bgCamPos.x /= 2;
+    bgCamPos.y /= 2;
     if (playerScreenPos.x > rightCamBnd * scaleFactor)
     {
         cameraPositions->x = (playerPositions->x - rightCamBnd);
@@ -65,15 +68,18 @@ static void camPos()
     {
         cameraPositions->y = (rectSize.y - window.getSize().y) / scaleFactor;
     }
-    lvlFG->setPosition(sf::Vector2f(-cameraPositions->x * scaleFactor,-cameraPositions->y * scaleFactor));
-    lvlBG->setPosition(sf::Vector2f((-cameraPositions->x * scaleFactor)/2,(-cameraPositions->y * scaleFactor)/2));
+    lvlBG->setTextureRect(sf::IntRect(bgCamPos,sf::Vector2i(window.getSize().x / scaleFactor, window.getSize().y / scaleFactor)));
+    lvlFG->setTextureRect(sf::IntRect(sf::Vector2i(*cameraPositions),sf::Vector2i(window.getSize().x / scaleFactor, window.getSize().y / scaleFactor)));
 }
 
-static const types::u8* loadMap()
+static const sf::IntRect* loadMap()
 {
-    sf::Vector2f scaledMapSize(mapSizes[level]);
-    scaledMapSize.x *= scaleFactor;
-    scaledMapSize.y *= scaleFactor;
+    lvlFG = new sf::RectangleShape;
+    lvlBG = new sf::RectangleShape;
+    lvlPxBG = new sf::Texture;
+    lvlPxFG = new sf::Texture;
+    lvlBG->setSize(sf::Vector2f(window.getSize()));
+    lvlFG->setSize(sf::Vector2f(window.getSize()));
     switch (level)
     {
     case 0:
@@ -82,14 +88,11 @@ static const types::u8* loadMap()
         lvlPxFG->loadFromFile(testLvlFG);
         lvlBG->setTexture(lvlPxBG);
         lvlFG->setTexture(lvlPxFG);
-        lvlFG->setSize(scaledMapSize);
-        lvlBG->setSize(scaledMapSize);
         playerPositions->x = 48;
         playerPositions->y = 160;
         music.openFromFile(lfTrack);
         music.setLoop(true);
         music.play();
-        *bgColor = sf::Color(0xFF00FFFF);
         return testLvlCollision;
         break;
     }
@@ -106,7 +109,9 @@ static void updatePlayer()
 {
     playerPositions->x += playerVelocities->x;
     playerPositions->y += playerVelocities->y;
-    sf::Vector2f rectSize(lvlBG->getSize());
+    sf::Vector2f rectSize(lvlPxBG->getSize());
+    rectSize.x *= scaleFactor;
+    rectSize.y *= scaleFactor;
     if (playerPositions->x < playerSprite->getOrigin().x)
     {
         playerPositions->x = playerSprite->getOrigin().x;
@@ -140,27 +145,39 @@ static void gameInputHdl_KB()
     {
         playerVelocities->x = -1.5;
         playerSprite->setScale(-scaleFactor,scaleFactor);
+        playerDirection->left = true;
+        playerDirection->right = false;
     }
     else if (rightPressed)
     {
         playerVelocities->x = 1.5;
         playerSprite->setScale(scaleFactor,scaleFactor);
+        playerDirection->left = false;
+        playerDirection->right = true;
     }
     else
     {
         playerVelocities->x = 0;
+        playerDirection->left = false;
+        playerDirection->right = false;
     }
     if (upPressed)
     {
         playerVelocities->y = -1.5;
+        playerDirection->up = true;
+        playerDirection->down = false;
     }
     else if (downPressed)
     {
         playerVelocities->y = 1.5;
+        playerDirection->up = false;
+        playerDirection->down = true;
     }
     else
     {
         playerVelocities->y = 0;
+        playerDirection->up = false;
+        playerDirection->down = false;
     }
 }
 
@@ -191,14 +208,18 @@ static void gameCleanup()
 {
     delete cameraPositions;
     delete isPaused;
-    delete bgColor;
+    delete lvlBG;
     delete lvlPxBG;
+    delete lvlFG;
     delete lvlPxFG;
     delete playerSprite;
     delete playerTexture;
     delete playerPositions;
     delete playerVelocities;
     delete maxSpeed;
+    collisionThread->join();
+    delete collisionThread;
+    delete playerDirection;
 }
 
 static void selectMenuPause()
@@ -271,12 +292,49 @@ static void spawnPlayer()
     playerSprite->setOrigin(sf::Vector2f(playerTexture->getSize().x/2,playerTexture->getSize().y/2));
     playerPositions = new sf::Vector2f(*cameraPositions);
     playerVelocities = new sf::Vector2f(*cameraPositions);
-    maxSpeed = new float(cameraPositions->x);
+    maxSpeed = new float(1.5);
+    playerDirection = new structs::Directions;
 }
 
-static void chkCollision(const types::u8* collisionArray)
+static void chkCollision(const sf::IntRect* collisionArray)
 {
-
+    sf::IntRect playerHitbox;
+    sf::Vector2i hitboxPosition;
+    types::u8 collisionIndex = 0;
+    while(!*isPaused)
+    {
+        if (collisionIndex == collisionRectAmounts[level])
+        {
+            collisionIndex = 0;
+        }
+        else
+        {
+            collisionIndex++;
+        }
+        hitboxPosition.x = playerPositions->x - playerSprite->getOrigin().x;
+        hitboxPosition.y = playerPositions->y - playerSprite->getOrigin().y;
+        playerHitbox = {hitboxPosition,sf::Vector2i(17,30)};
+        bool isIntersecting = playerHitbox.intersects(collisionArray[collisionIndex]);
+        if (isIntersecting)
+        {
+            if (playerDirection->down)
+            {
+                playerPositions->y = collisionArray[collisionIndex].top - playerSprite->getOrigin().y;
+            }
+            else if (playerDirection->up)
+            {
+                playerPositions->y = (collisionArray[collisionIndex].top + collisionArray[collisionIndex].height) + playerSprite->getOrigin().y;
+            }
+            if (playerDirection->right)
+            {
+                playerPositions->x = collisionArray[collisionIndex].left - playerSprite->getOrigin().x;
+            }
+            else if (playerDirection->left)
+            {
+                playerPositions->x = (collisionArray[collisionIndex].left + collisionArray[collisionIndex].width) + playerSprite->getOrigin().x;
+            }
+        }
+    }
 }
 
 void gameInit()
@@ -284,19 +342,16 @@ void gameInit()
     fadeRect.setFillColor(sf::Color::Black);
     cameraPositions = new sf::Vector2f(0,0);
     isPaused = new bool(false);
-    bgColor = new sf::Color(0x000000FF);
-    lvlPxBG = new sf::Texture;
-    lvlPxFG = new sf::Texture;
-    lvlBG = new sf::RectangleShape(sf::Vector2f(window.getSize()));
-    lvlFG = new sf::RectangleShape(*lvlBG);
     spawnPlayer();
-    const types::u8* collisionArray = loadMap();
+    const sf::IntRect* collisionArray = loadMap();
+    collisionThread = new std::thread(chkCollision,collisionArray);
     while (window.isOpen())
     {
-        window.clear(*bgColor);
+        window.clear(sf::Color::Black);
         window.draw(*lvlBG);
         window.draw(*lvlFG);
         window.draw(*playerSprite);
+        drawHUD();
         if (!*isPaused)
         {
             gameInputHdl_KB();
@@ -304,14 +359,12 @@ void gameInit()
             updatePlayer();
             fadeMusic(false,volFadeSpeed,volMax);
             screenFade(volFadeSpeed,true,fadeDark);
-            chkCollision(collisionArray);
         }
         else
         {
             fadeMusic(true,volFadeSpeed,50);
             screenFade(volFadeSpeed*3,false,0x7F);
         }
-        drawHUD();
         if (*isPaused)
         {
             drawMenu(pauseMenu,pauseOptsAmnt);

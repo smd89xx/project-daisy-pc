@@ -23,4 +23,13 @@ namespace structs
             bool isSFX;
         ~SndMData();
     };
+    class Directions
+    {
+        public:
+            bool up;
+            bool down;
+            bool left;
+            bool right;
+        ~Directions();
+    };
 }
