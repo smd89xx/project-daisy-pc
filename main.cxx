@@ -11,7 +11,7 @@ int main(int argc, char** argv)
     sf::Image icon;
     if (!icon.loadFromFile(favicon))
     {
-        printerr(missingAssetsErr);
+        printerr(missingAssetsErr,true);
     }
     window.setIcon(icon.getSize().x,icon.getSize().y,icon.getPixelsPtr());
     font.loadFromFile(blazeTTF);

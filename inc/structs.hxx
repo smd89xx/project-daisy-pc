@@ -32,4 +32,12 @@ namespace structs
             bool right;
         ~Directions();
     };
+    class AnimMData
+    {
+        public:
+            types::u16 startY;
+            types::u8 frameAmount;
+            types::u8 frameTime;
+        ~AnimMData();
+    };
 }

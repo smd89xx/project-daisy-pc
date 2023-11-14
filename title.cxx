@@ -1,8 +1,8 @@
 #include "inc/includes.hxx"
 
-const types::u8 titleX = 6;
+const types::u8 titleX = 2;
 const types::u8 titleY = 22;
-const types::u8 titleOptAmnt = 4;
+const types::u8 titleOptAmnt = 5;
 const std::string comingSoonText = "Feature will be added soon!";
 
 const structs::Option titleMenu[] = 
@@ -11,6 +11,7 @@ const structs::Option titleMenu[] =
     {titleX+10,titleY,"Continue Game"},
     {titleX+22,titleY,"Statistics"},
     {titleX+31,titleY,"Preferences"},
+    {titleX+41.75,titleY,"Exit Game"},
 };
 
 static void selectMenuTitle()
@@ -50,12 +51,51 @@ static void selectMenuTitle()
             prefsScreen();
             break;
         }
+        case 4:
+        {
+            window.close();
+            break;
+        }
         default:
         {
             printerr(missingFuncErr);
             break;
         }
     }
+}
+
+static void moveCursor(bool direction)
+{
+    if (!direction)
+    {    
+        sndHvr.play();
+        if (menuIndex == 0)
+        {
+            menuIndex = titleOptAmnt-1;
+        }
+        else
+        {
+            menuIndex--;
+        }
+    }
+    else
+    {
+        sndHvr.play();
+        if (menuIndex >= titleOptAmnt-1)
+        {
+            menuIndex = 0;
+        }
+        else
+        {
+            menuIndex++;
+        }
+    }
+}
+
+static void callSelect()
+{
+    sndCnf.play();
+    selectMenuTitle();
 }
 
 void title()
@@ -90,7 +130,7 @@ void title()
         window.draw(copyInfo);
         window.draw(versionText);
         window.draw(titleSprite);
-        drawMenu(titleMenu,4);
+        drawMenu(titleMenu,titleOptAmnt);
         screenFade(volFadeSpeed,true,fadeDark);
         window.display();
         while (window.pollEvent(e))
@@ -104,38 +144,71 @@ void title()
             }
             case sf::Event::KeyPressed:
             {
-                if (!window.hasFocus())
-                {
-                    break;
-                }
                 if (e.key.scancode == sf::Keyboard::Scan::Left)
                 {
-                    sndHvr.play();
-                    if (menuIndex == 0)
-                    {
-                        menuIndex = titleOptAmnt-1;
-                    }
-                    else
-                    {
-                        menuIndex--;
-                    }
+                    moveCursor(false);
                 }
                 else if (e.key.scancode == sf::Keyboard::Scan::Right)
                 {
-                    sndHvr.play();
-                    if (menuIndex >= titleOptAmnt-1)
-                    {
-                        menuIndex = 0;
-                    }
-                    else
-                    {
-                        menuIndex++;
-                    }
+                    moveCursor(true);
                 }
                 if (e.key.scancode == sf::Keyboard::Scan::Enter)
                 {
                     sndCnf.play();
                     selectMenuTitle();
+                }
+                else if (e.key.scancode == sf::Keyboard::Scan::Escape)
+                {
+                    menuIndex = 4;
+                    sndBack.play();
+                    selectMenuTitle();
+                }
+                break;
+            }
+            case sf::Event::JoystickButtonPressed:
+            {
+                if (!window.hasFocus())
+                {
+                    break;
+                }
+                switch (e.joystickButton.button)
+                {
+                    case buttonCross:
+                    {
+                        sndCnf.play();
+                        selectMenuTitle();
+                        break;
+                    }
+                    case buttonCircle:
+                    {
+                        menuIndex = 4;
+                        sndBack.play();
+                        selectMenuTitle();
+                        break;
+                    }
+                    default:
+                    {
+                        break;
+                    }
+                }
+                break;
+            }
+            case sf::Event::JoystickMoved:
+            {
+                if (!window.hasFocus())
+                {
+                    break;
+                }
+                if (e.joystickMove.axis == axisDPADX)
+                {
+                    if (e.joystickMove.position == -100)
+                    {
+                        moveCursor(false);
+                    }
+                    else if (e.joystickMove.position == 100)
+                    {
+                        moveCursor(true);
+                    }
                 }
                 break;
             }

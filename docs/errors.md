@@ -23,9 +23,16 @@ Since this is a PC game, this error is here to stay, unfortunately.
 
 Encountered when `res/imgs/icon2.png` is not found. This may be extended to all of the other used assets, however I am too lazy to implement that many checks right now.
 
+Because all of the assets are gone, the GUI BSoD will not output _anything_. Therefore, the game will use `std::cout` instead, so try running the game through the terminal if it decides not to open.
+
 0x4 - Invalid Scale Factor
 --------------------------
 
 Encountered when the scale factor variable is set to a value outside of the intended range. This is because the resolutions are hardcoded<sup>1</sup>. This error should also not be encountered during normal operation.
+
+0x5 - Invalid Player ID
+-----------------------
+
+Encountered whenn the player ID variable is set to a value outside of the intended range. Right now, encountering this makes sense as one of the characters is unimplemented. However, once this changes, you should not be able to encounter this as the data type used is `bool`.
 
 <sup>1</sup>Subject to change.

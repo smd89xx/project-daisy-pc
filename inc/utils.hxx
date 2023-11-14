@@ -30,11 +30,41 @@ enum errorCodes
     badLevelErr,
     missingAssetsErr,
     invalidScaleErr,
+    invalidPlayerErr,
+};
+
+enum ds4Buttons
+{
+    buttonCross,
+    buttonCircle,
+    buttonTriangle,
+    buttonSquare,
+    buttonL1,
+    buttonR1,
+    buttonL2,
+    buttonR2,
+    buttonShare,
+    buttonOptions,
+    buttonPS,
+    buttonL3,
+    buttonR3,
+};
+
+enum ds4Axes
+{
+    axisL3X,
+    axisL3Y,
+    axisL2,
+    axisR3X,
+    axisR3Y,
+    axisR2,
+    axisDPADX, // why in the hell
+    axisDPADY, // are these mapped as axes?!
 };
 
 void screenFade(float speed, bool direction, float fadeTarget);
 void drawMenu(const structs::Option* option, types::u8 length);
 void fadeMusic(bool direction, float speed, float targetVolume);
 float pixelToTile(float pos);
-void printerr(int error);
+void printerr(int error, bool fallback = false);
 void updScreenSize();
