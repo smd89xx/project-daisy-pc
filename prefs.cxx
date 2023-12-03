@@ -44,6 +44,15 @@ static void clearMem()
     delete plrStr;
 }
 
+static void exitEvent()
+{
+    saveRAM[addrDifficulty] = difficulty;
+    saveRAM[addrPlayer] = player;
+    saveRAM[addrScaling] = scaleFactor;
+    updSRAM();
+    window.close();
+}
+
 static void selectMenuPrefs()
 {   
     if (menuIndex >= 6)
@@ -66,7 +75,7 @@ static void selectMenuPrefs()
             {
                 if (e.type == sf::Event::Closed)
                 {
-                    window.close();
+                    exitEvent();
                     return;
                 }
             }
@@ -113,6 +122,9 @@ static void selectMenuPrefs()
         }
         case 7:
         {
+            saveRAM[addrDifficulty] = difficulty;
+            saveRAM[addrPlayer] = player;
+            saveRAM[addrScaling] = scaleFactor;
             menuIndex = 3;
             clearMem();
             title();
@@ -220,7 +232,7 @@ void prefsScreen()
             {
                 case sf::Event::Closed:
                 {
-                    window.close();
+                    exitEvent();
                     break;
                 }
                 case sf::Event::KeyPressed:

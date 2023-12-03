@@ -25,3 +25,4 @@ extern const std::string bsodQR;
 extern const std::string crashSFX;
 extern const std::string jumpSFX;
 extern const std::string placeholderSpr;
+extern const std::string saveFileLocation;

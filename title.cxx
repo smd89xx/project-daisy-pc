@@ -3,7 +3,7 @@
 const types::u8 titleX = 2;
 const types::u8 titleY = 22;
 const types::u8 titleOptAmnt = 5;
-const std::string comingSoonText = "Feature will be added soon!";
+const sf::IntRect titleCurRects[] = {{titleX,titleY,0,0}};
 
 const structs::Option titleMenu[] = 
 {
@@ -34,6 +34,7 @@ static void selectMenuTitle()
         {
             if (e.type == sf::Event::Closed)
             {
+                updSRAM();
                 window.close();
                 return;
             }
@@ -43,6 +44,17 @@ static void selectMenuTitle()
     {
         case 0:
         {
+            level = 0;
+            lives = 5;
+            score = 0;
+            gameInit();
+            break;
+        }
+        case 1:
+        {
+            level = saveRAM[addrLevel];
+            lives = saveRAM[addrLives];
+            score = readSRAM_u32(addrScore);
             gameInit();
             break;
         }
@@ -53,12 +65,13 @@ static void selectMenuTitle()
         }
         case 4:
         {
+            updSRAM();
             window.close();
             break;
         }
         default:
         {
-            printerr(missingFuncErr);
+            printerr(missingFuncErr,"selectMenuTitle()");
             break;
         }
     }
@@ -139,6 +152,7 @@ void title()
             {
             case sf::Event::Closed:
             {
+                updSRAM();
                 window.close();
                 break;
             }

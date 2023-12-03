@@ -21,9 +21,9 @@ Since this is a PC game, this error is here to stay, unfortunately.
 0x3 - Missing Assets Error
 --------------------------
 
-Encountered when `res/imgs/icon2.png` is not found. This may be extended to all of the other used assets, however I am too lazy to implement that many checks right now.
+Encountered when any game resource is missing.
 
-Because all of the assets are gone, the GUI BSoD will not output _anything_. Therefore, the game will use `std::cout` instead, so try running the game through the terminal if it decides not to open.
+Because all of the assets are gone, the GUI BSoD will not output _anything_. Therefore, the game will use `std::cout` instead, so try running the game through the terminal if it decides not to open, or randomly closes.
 
 0x4 - Invalid Scale Factor
 --------------------------
@@ -34,5 +34,14 @@ Encountered when the scale factor variable is set to a value outside of the inte
 -----------------------
 
 Encountered whenn the player ID variable is set to a value outside of the intended range. Right now, encountering this makes sense as one of the characters is unimplemented. However, once this changes, you should not be able to encounter this as the data type used is `bool`.
+
+0x6 - Invalid Save Checksum
+---------------------------
+
+Encountered when the save file checksum and expected checksum does not match.
+
+This can be for a variety of reasons, including corruption and intentional hex-editing. For those who intentionally manipulate save files, the corrected checksum is also displayed. Otherwise, you may have to start fresh.
+
+This error is also displayed through `std::cout`, and only when the program is starting up, so consider running the game through the terminal if it refuses to start.
 
 <sup>1</sup>Subject to change.

@@ -1,6 +1,6 @@
 #include "inc/includes.hxx"
 
-const types::u8 sndAmnt = 9;
+const types::u8 sndAmnt = 10;
 const float musX = 0;
 const float musY = 0;
 const float musTitleXDelta = 5;
@@ -21,6 +21,7 @@ const structs::SndMData musHdr[] =
     {&confSFX,"Menu Select","Game","TheWindowsPro98",false,true},
     {&backSFX,"Menu Back","Game","TheWindowsPro98",false,true},
     {&crashSFX,"Macintosh IIcx Crash Chime","Chimes of Death","???",false,true},
+    {&jumpSFX,"Jump","Game","TheWindowsPro98",false,true},
 };
 sf::SoundBuffer* sb;
 sf::Sound* snd;
@@ -49,6 +50,7 @@ static void jukeboxBack()
         {
             if (e.type == sf::Event::Closed)
             {
+                updSRAM();
                 window.close();
                 return;
             }
@@ -167,6 +169,7 @@ void jukebox()
             {
             case sf::Event::Closed:
             {
+                updSRAM();
                 window.close();
                 break;
             }

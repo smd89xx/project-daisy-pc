@@ -36,10 +36,10 @@ float* jumpStrength;
 const structs::AnimMData playerAnimData[2][3] = 
 {
     {
-        {0,1,0},{32,2,15},{64,1,0},
+        {0,1,0},{1,2,15},{2,1,0},
     },
     {
-        {0,1,0},{32,2,15},{64,1,0},
+        {0,1,0},{1,2,15},{2,1,0},
     }
 };
 enum playerAnimIDs
@@ -48,6 +48,8 @@ enum playerAnimIDs
     playerWalking,
     playerJumping,
 };
+types::u8 lives = 5;
+types::u32 score = 0;
 
 static void camPos()
 {
@@ -143,11 +145,7 @@ static void updatePlayer()
     {
         playerPositions->x = (rectSize.x - playerTexture->getSize().x) / scaleFactor;
     }
-    if (playerPositions->y < playerSprite->getOrigin().y)
-    {
-        playerPositions->y = playerSprite->getOrigin().y;
-    }
-    else if (playerPositions->y > (rectSize.y) / scaleFactor)
+    if (playerPositions->y > (rectSize.y) / scaleFactor)
     {
         playerPositions->y = (rectSize.y) / scaleFactor;
     }
@@ -248,25 +246,7 @@ static void gameInputHdl_Joy()
 
 static void drawHUD()
 {
-    sf::Text camXLabel(templateText);
-    sf::Text camYLabel(templateText);
-    sf::Text plrXLabel(templateText);
-    sf::Text plrYLabel(templateText);
-    camYLabel.setPosition(0, 27.5);
-    plrXLabel.setPosition(pixelToTile(16),0);
-    plrYLabel.setPosition(pixelToTile(16),27.5);
-    std::string cxStr = std::to_string(cameraPositions->x);
-    std::string cyStr = std::to_string(cameraPositions->y);
-    std::string pxStr = std::to_string(playerPositions->x);
-    std::string pyStr = std::to_string(playerPositions->y);
-    camXLabel.setString("CX: " + cxStr);
-    camYLabel.setString("CY: " + cyStr);
-    plrXLabel.setString("PX: " + pxStr);
-    plrYLabel.setString("PY: " + pyStr);
-    window.draw(camXLabel);
-    window.draw(camYLabel);
-    window.draw(plrXLabel);
-    window.draw(plrYLabel);
+    
 }
 
 static void gameCleanup()
@@ -293,6 +273,20 @@ static void gameCleanup()
     delete sndGame;
 }
 
+static void gameBack()
+{
+    menuIndex = 0;
+    gameCleanup();
+    title();
+}
+
+static void exitEvent()
+{
+    saveRAM[addrLevel] = level;
+    updSRAM();
+    window.close();
+}
+
 static void selectMenuPause()
 {
     if (menuIndex >= 1)
@@ -317,7 +311,7 @@ static void selectMenuPause()
             {
                 if (e.type == sf::Event::Closed)
                 {
-                    window.close();
+                    exitEvent();
                     return;
                 }
             }
@@ -330,11 +324,17 @@ static void selectMenuPause()
         *isPaused = false;
         break;
     }
+    case 1:
+    {
+        saveRAM[addrLevel] = level;
+        saveRAM[addrLives] = lives;
+        writeSRAM_u32(addrScore,score);
+        gameBack();
+        break;
+    }
     case 2:
     {
-        menuIndex = 0;
-        gameCleanup();
-        title();
+       gameBack();
         break;
     }
     default:
@@ -368,7 +368,7 @@ static void spawnPlayer()
     playerDirection = new structs::Directions;
     gravity = new float(0.125);
     isJumping = new bool(false);
-    jumpStrength = new float(4.75);
+    jumpStrength = new float(16);
 }
 
 static void chkCollision(const sf::IntRect* collisionArray)
@@ -392,12 +392,13 @@ static void chkCollision(const sf::IntRect* collisionArray)
         bool isIntersecting = playerHitbox.intersects(collisionArray[collisionIndex]);
         if (isIntersecting)
         {
-            if (!*isJumping)
+            if (playerVelocities->y >= 0)
             {
                 playerPositions->y = collisionArray[collisionIndex].top - playerSprite->getOrigin().y;
+                *isJumping = false;
                 playerVelocities->y = 0;
             }
-            else
+            else if (playerVelocities->y < 0)
             {
                 playerPositions->y = ((collisionArray[collisionIndex].top + collisionArray[collisionIndex].height) + playerSprite->getOrigin().y);
                 playerVelocities->y = 0;
@@ -499,7 +500,7 @@ void gameInit()
             {
             case sf::Event::Closed:
             {
-                window.close();
+                exitEvent();
                 break;
             }
             case sf::Event::KeyPressed:

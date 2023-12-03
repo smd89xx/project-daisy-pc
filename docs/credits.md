@@ -17,4 +17,11 @@ Fonts
 
 - Source Code Pro font by Paul D. Hunt (permanent<sup>1</sup>)
 
+Libraries
+---------
+
+- SFML by SFML Team
+
+- zlib by Jean-loup Gailly and Mark Adler
+
 <sup>1</sup>Subject to change
