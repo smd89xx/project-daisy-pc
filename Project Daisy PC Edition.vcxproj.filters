@@ -96,11 +96,5 @@
     <Image Include="res\imgs\project-daisy-icon.ico">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="res\imgs\icon2.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="res\imgs\daisy_px.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
   </ItemGroup>
 </Project>

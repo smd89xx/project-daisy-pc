@@ -1,11 +1,7 @@
 #pragma once
 
 #include <iostream>
-#include <fstream>
-#include <iomanip>
 #include <thread>
-#include <sstream>
-#include <zlib.h>
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>

@@ -160,8 +160,6 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon1.ico" />
-    <Image Include="res\imgs\daisy_px.ico" />
-    <Image Include="res\imgs\icon2.ico" />
     <Image Include="res\imgs\project-daisy-icon.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

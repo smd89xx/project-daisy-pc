@@ -2,8 +2,7 @@
 
 namespace structs
 {
-    Option::~Option(){}
-    SndMData::~SndMData(){}
-    Directions::~Directions(){}
-    AnimMData::~AnimMData(){}
+    Option::~Option(){};
+    SndMData::~SndMData(){};
+    Directions::~Directions(){};
 }

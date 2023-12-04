@@ -32,12 +32,4 @@ namespace structs
             bool right;
         ~Directions();
     };
-    class AnimMData
-    {
-        public:
-            types::u16 animIndex;
-            types::u8 frameAmount;
-            types::u8 frameTime; // In NTSC frames (60 frames = 1 second)
-        ~AnimMData();
-    };
 }

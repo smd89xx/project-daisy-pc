@@ -24,32 +24,8 @@ float* maxSpeed;
 const types::u8 collisionRectAmounts[] = {5};
 std::thread* collisionThread;
 structs::Directions* playerDirection;
-bool* runThread;
-float* gravity;
-bool* isJumping;
 enum cameraBoundaries {leftCamBnd = 144, rightCamBnd = 144, topCamBnd = 104, bottomCamBnd = 104};
 enum tileTypes {tileBlank, tileSolid, tileSlopeE, tileSlopeW, tileSpringN, tileRing, tileSpringE, tileSpringW};
-const sf::Vector2i playerHitboxes[] = {{0,0},{15,30}};
-sf::SoundBuffer* sbGame;
-sf::Sound* sndGame;
-float* jumpStrength;
-const structs::AnimMData playerAnimData[2][3] = 
-{
-    {
-        {0,1,0},{1,2,15},{2,1,0},
-    },
-    {
-        {0,1,0},{1,2,15},{2,1,0},
-    }
-};
-enum playerAnimIDs
-{
-    playerIdle,
-    playerWalking,
-    playerJumping,
-};
-types::u8 lives = 5;
-types::u32 score = 0;
 
 static void camPos()
 {
@@ -133,7 +109,6 @@ static void updatePlayer()
 {
     playerPositions->x += playerVelocities->x;
     playerPositions->y += playerVelocities->y;
-    playerVelocities->y += *gravity;
     sf::Vector2f rectSize(lvlPxBG->getSize());
     rectSize.x *= scaleFactor;
     rectSize.y *= scaleFactor;
@@ -145,7 +120,11 @@ static void updatePlayer()
     {
         playerPositions->x = (rectSize.x - playerTexture->getSize().x) / scaleFactor;
     }
-    if (playerPositions->y > (rectSize.y) / scaleFactor)
+    if (playerPositions->y < playerSprite->getOrigin().y)
+    {
+        playerPositions->y = playerSprite->getOrigin().y;
+    }
+    else if (playerPositions->y > (rectSize.y) / scaleFactor)
     {
         playerPositions->y = (rectSize.y) / scaleFactor;
     }
@@ -154,6 +133,10 @@ static void updatePlayer()
 
 static void gameInputHdl_KB()
 {
+    if (!window.hasFocus())
+    {
+        return;
+    }
     bool leftPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Left);
     bool rightPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Right);
     bool upPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Up);
@@ -180,65 +163,19 @@ static void gameInputHdl_KB()
     }
     if (upPressed)
     {
+        playerVelocities->y = -1.5;
         playerDirection->up = true;
         playerDirection->down = false;
     }
     else if (downPressed)
     {
+        playerVelocities->y = 1.5;
         playerDirection->up = false;
         playerDirection->down = true;
     }
     else
     {
-        playerDirection->up = false;
-        playerDirection->down = false;
-    }
-}
-
-static void gameInputHdl_Joy()
-{
-    if (!window.hasFocus() || !sf::Joystick::isConnected(0))
-    {
-        return;
-    }
-    types::s8 XPos = sf::Joystick::getAxisPosition(0,(sf::Joystick::Axis)axisDPADX);
-    types::s8 YPos = sf::Joystick::getAxisPosition(0,(sf::Joystick::Axis)axisDPADY);
-    bool leftPressed = (XPos == -100);
-    bool rightPressed = (XPos == 100);
-    bool upPressed = (YPos == -100);
-    bool downPressed = (YPos == 100);
-    if (leftPressed)
-    {
-        playerVelocities->x = -1.5;
-        playerSprite->setScale(-scaleFactor,scaleFactor);
-        playerDirection->left = true;
-        playerDirection->right = false;
-    }
-    else if (rightPressed)
-    {
-        playerVelocities->x = 1.5;
-        playerSprite->setScale(scaleFactor,scaleFactor);
-        playerDirection->left = false;
-        playerDirection->right = true;
-    }
-    else
-    {
-        playerVelocities->x = 0;
-        playerDirection->left = false;
-        playerDirection->right = false;
-    }
-    if (upPressed)
-    {
-        playerDirection->up = true;
-        playerDirection->down = false;
-    }
-    else if (downPressed)
-    {
-        playerDirection->up = false;
-        playerDirection->down = true;
-    }
-    else
-    {
+        playerVelocities->y = 0;
         playerDirection->up = false;
         playerDirection->down = false;
     }
@@ -246,7 +183,25 @@ static void gameInputHdl_Joy()
 
 static void drawHUD()
 {
-    
+    sf::Text camXLabel(templateText);
+    sf::Text camYLabel(templateText);
+    sf::Text plrXLabel(templateText);
+    sf::Text plrYLabel(templateText);
+    camYLabel.setPosition(0, 27.5);
+    plrXLabel.setPosition(pixelToTile(16),0);
+    plrYLabel.setPosition(pixelToTile(16),27.5);
+    std::string cxStr = std::to_string(cameraPositions->x);
+    std::string cyStr = std::to_string(cameraPositions->y);
+    std::string pxStr = std::to_string(playerPositions->x);
+    std::string pyStr = std::to_string(playerPositions->y);
+    camXLabel.setString("CX: " + cxStr);
+    camYLabel.setString("CY: " + cyStr);
+    plrXLabel.setString("PX: " + pxStr);
+    plrYLabel.setString("PY: " + pyStr);
+    window.draw(camXLabel);
+    window.draw(camYLabel);
+    window.draw(plrXLabel);
+    window.draw(plrYLabel);
 }
 
 static void gameCleanup()
@@ -262,29 +217,9 @@ static void gameCleanup()
     delete playerPositions;
     delete playerVelocities;
     delete maxSpeed;
-    *runThread = false;
     collisionThread->join();
-    delete runThread;
     delete collisionThread;
     delete playerDirection;
-    delete gravity;
-    delete isJumping;
-    delete sbGame;
-    delete sndGame;
-}
-
-static void gameBack()
-{
-    menuIndex = 0;
-    gameCleanup();
-    title();
-}
-
-static void exitEvent()
-{
-    saveRAM[addrLevel] = level;
-    updSRAM();
-    window.close();
 }
 
 static void selectMenuPause()
@@ -311,7 +246,7 @@ static void selectMenuPause()
             {
                 if (e.type == sf::Event::Closed)
                 {
-                    exitEvent();
+                    window.close();
                     return;
                 }
             }
@@ -324,17 +259,11 @@ static void selectMenuPause()
         *isPaused = false;
         break;
     }
-    case 1:
-    {
-        saveRAM[addrLevel] = level;
-        saveRAM[addrLives] = lives;
-        writeSRAM_u32(addrScore,score);
-        gameBack();
-        break;
-    }
     case 2:
     {
-       gameBack();
+        menuIndex = 0;
+        gameCleanup();
+        title();
         break;
     }
     default:
@@ -350,25 +279,21 @@ static void spawnPlayer()
     const std::string* playerTexturePath;
     if (player)
     {
-        playerTexturePath = &placeholderSpr;
+        playerTexturePath = &stephSpr;
     }
     else
     {
-        printerr(invalidPlayerErr);
+        printerr(missingFuncErr);
     }
     playerTexture = new sf::Texture;
     playerTexture->loadFromFile(*playerTexturePath);
     playerSprite = new sf::Sprite(*playerTexture);
-    playerSprite->setTextureRect({0,0,32,32});
     playerSprite->setScale(sf::Vector2f(scaleFactor,scaleFactor));
-    playerSprite->setOrigin(sf::Vector2f(playerSprite->getTextureRect().width/2,playerSprite->getTextureRect().height/2));
+    playerSprite->setOrigin(sf::Vector2f(playerTexture->getSize().x/2,playerTexture->getSize().y/2));
     playerPositions = new sf::Vector2f(*cameraPositions);
     playerVelocities = new sf::Vector2f(*cameraPositions);
     maxSpeed = new float(1.5);
     playerDirection = new structs::Directions;
-    gravity = new float(0.125);
-    isJumping = new bool(false);
-    jumpStrength = new float(16);
 }
 
 static void chkCollision(const sf::IntRect* collisionArray)
@@ -376,7 +301,7 @@ static void chkCollision(const sf::IntRect* collisionArray)
     sf::IntRect playerHitbox;
     sf::Vector2i hitboxPosition;
     types::u8 collisionIndex = 0;
-    while(*runThread)
+    while(!*isPaused)
     {
         if (collisionIndex == collisionRectAmounts[level])
         {
@@ -386,75 +311,30 @@ static void chkCollision(const sf::IntRect* collisionArray)
         {
             collisionIndex++;
         }
-        hitboxPosition.x = playerPositions->x + (playerSprite->getOrigin().x - 24);
+        hitboxPosition.x = playerPositions->x - playerSprite->getOrigin().x;
         hitboxPosition.y = playerPositions->y - playerSprite->getOrigin().y;
-        playerHitbox = {hitboxPosition,playerHitboxes[player]};
+        playerHitbox = {hitboxPosition,sf::Vector2i(17,30)};
         bool isIntersecting = playerHitbox.intersects(collisionArray[collisionIndex]);
         if (isIntersecting)
         {
-            if (playerVelocities->y >= 0)
+            if (playerDirection->down)
             {
                 playerPositions->y = collisionArray[collisionIndex].top - playerSprite->getOrigin().y;
-                *isJumping = false;
-                playerVelocities->y = 0;
             }
-            else if (playerVelocities->y < 0)
+            else if (playerDirection->up)
             {
-                playerPositions->y = ((collisionArray[collisionIndex].top + collisionArray[collisionIndex].height) + playerSprite->getOrigin().y);
-                playerVelocities->y = 0;
+                playerPositions->y = (collisionArray[collisionIndex].top + collisionArray[collisionIndex].height) + playerSprite->getOrigin().y;
             }
             if (playerDirection->right)
             {
-                playerPositions->x = collisionArray[collisionIndex].left - (playerSprite->getOrigin().x / 2);
+                playerPositions->x = collisionArray[collisionIndex].left - playerSprite->getOrigin().x;
             }
             else if (playerDirection->left)
             {
-                playerPositions->x = (collisionArray[collisionIndex].left + collisionArray[collisionIndex].width) + (playerSprite->getOrigin().x / 2);
+                playerPositions->x = (collisionArray[collisionIndex].left + collisionArray[collisionIndex].width) + playerSprite->getOrigin().x;
             }
         }
     }
-}
-
-static void cursorMove(bool direction)
-{
-    if (!direction)
-    {
-        sndHvr.play();
-        if (menuIndex <= 0)
-        {
-            menuIndex = pauseOptsAmnt - 1;
-        }
-        else
-        {
-            menuIndex--;
-        }
-    }
-    else
-    {
-        sndHvr.play();
-        if (menuIndex >= pauseOptsAmnt - 1)
-        {
-            menuIndex = 0;
-        }
-        else
-        {
-            menuIndex++;
-        }
-    }
-}
-
-static void jump()
-{
-    if (*isJumping)
-    {
-        return;
-    }
-    sbGame->loadFromFile(jumpSFX);
-    sndGame->setBuffer(*sbGame);
-    sndGame->play();
-    playerPositions->y -= 5;
-    playerVelocities->y -= *jumpStrength;
-    *isJumping = true;
 }
 
 void gameInit()
@@ -462,9 +342,6 @@ void gameInit()
     fadeRect.setFillColor(sf::Color::Black);
     cameraPositions = new sf::Vector2f(0,0);
     isPaused = new bool(false);
-    runThread = new bool(true);
-    sbGame = new sf::SoundBuffer;
-    sndGame = new sf::Sound;
     spawnPlayer();
     const sf::IntRect* collisionArray = loadMap();
     collisionThread = new std::thread(chkCollision,collisionArray);
@@ -478,7 +355,6 @@ void gameInit()
         if (!*isPaused)
         {
             gameInputHdl_KB();
-            gameInputHdl_Joy();
             camPos();
             updatePlayer();
             fadeMusic(false,volFadeSpeed,volMax);
@@ -500,11 +376,15 @@ void gameInit()
             {
             case sf::Event::Closed:
             {
-                exitEvent();
+                window.close();
                 break;
             }
             case sf::Event::KeyPressed:
             {
+                if (!window.hasFocus())
+                {
+                    break;
+                }
                 if (!*isPaused)
                 {
                     if (e.key.scancode == sf::Keyboard::Scan::Enter)
@@ -517,11 +397,27 @@ void gameInit()
                 {
                     if (e.key.scancode == sf::Keyboard::Scan::Up)
                     {
-                        cursorMove(false);
+                        sndHvr.play();
+                        if (menuIndex <= 0)
+                        {
+                            menuIndex = pauseOptsAmnt - 1;
+                        }
+                        else
+                        {
+                            menuIndex--;
+                        }
                     }
                     else if (e.key.scancode == sf::Keyboard::Scan::Down)
                     {
-                        cursorMove(true);
+                        sndHvr.play();
+                        if (menuIndex >= pauseOptsAmnt - 1)
+                        {
+                            menuIndex = 0;
+                        }
+                        else
+                        {
+                            menuIndex++;
+                        }
                     }
                     if (e.key.scancode == sf::Keyboard::Scan::Enter)
                     {
@@ -533,59 +429,6 @@ void gameInit()
                         sndBack.play();
                         menuIndex = 0;
                         selectMenuPause();
-                    }
-                }
-                break;
-            }
-            case sf::Event::JoystickButtonPressed:
-            {
-                if (!window.hasFocus())
-                {
-                    break;
-                }
-                if (!*isPaused)
-                {
-                    if (e.joystickButton.button == buttonOptions)
-                    {
-                        sndCnf.play();
-                        *isPaused = true;
-                    }
-                    if (e.joystickButton.button == buttonCross)
-                    {
-                        jump();
-                    }
-                }
-                else
-                {
-                    if (e.joystickButton.button == buttonCross)
-                    {
-                        sndCnf.play();
-                        selectMenuPause();
-                    }
-                    else if (e.joystickButton.button == buttonOptions)
-                    {
-                        sndBack.play();
-                        menuIndex = 0;
-                        selectMenuPause();
-                    }
-                }
-                break;
-            }
-            case sf::Event::JoystickMoved:
-            {
-                if (!window.hasFocus() || !*isPaused)
-                {
-                    break;
-                }
-                if (e.joystickMove.axis == axisDPADY)
-                {
-                    if (e.joystickMove.position == -100)
-                    {
-                        cursorMove(false);
-                    }
-                    else if (e.joystickMove.position == 100)
-                    {
-                        cursorMove(true);
                     }
                 }
                 break;
