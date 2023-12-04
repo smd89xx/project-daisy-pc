@@ -20,6 +20,8 @@ const structs::Option prefsMenu[] =
     {prefsX+11,prefsY+4,"The Jukebox"},
     {prefsX+14.25, prefsY+6, "Exit"}
 };
+sf::Text* diffStr;
+sf::Text* plrStr;
 
 static void updConfOutline()
 {
@@ -34,6 +36,21 @@ static void updConfOutline()
     diffConf.setPosition(pixelToTile(prefsMenu[difficulty].x),pixelToTile(prefsMenu[difficulty].y));
     window.draw(plrConf);
     window.draw(diffConf);
+}
+
+static void clearMem()
+{
+    delete diffStr;
+    delete plrStr;
+}
+
+static void exitEvent()
+{
+    saveRAM[addrDifficulty] = difficulty;
+    saveRAM[addrPlayer] = player;
+    saveRAM[addrScaling] = scaleFactor;
+    updSRAM();
+    window.close();
 }
 
 static void selectMenuPrefs()
@@ -58,7 +75,7 @@ static void selectMenuPrefs()
             {
                 if (e.type == sf::Event::Closed)
                 {
-                    window.close();
+                    exitEvent();
                     return;
                 }
             }
@@ -99,40 +116,112 @@ static void selectMenuPrefs()
         case 6:
         {
             menuIndex = 0;
+            clearMem();
             jukebox();
             break;
         }
         case 7:
         {
+            saveRAM[addrDifficulty] = difficulty;
+            saveRAM[addrPlayer] = player;
+            saveRAM[addrScaling] = scaleFactor;
             menuIndex = 3;
+            clearMem();
             title();
             break;
         }
         default:
         {
+            clearMem();
             printerr(missingFuncErr);
             break;
         }
     }
 }
 
+static void cursorMove(bool direction)
+{
+    if (!direction)
+    {
+        sndHvr.play();
+        if (menuIndex == 0)
+        {
+            menuIndex = prefsMenuAmnt-1;
+        }
+        else
+        {
+            menuIndex--;
+        }
+    }
+    else
+    {
+        sndHvr.play();
+        if (menuIndex < prefsMenuAmnt-1)
+        {
+            menuIndex++;
+        }
+        else
+        {
+            menuIndex = 0;
+        }
+    }
+}
+
+static void changeScale(bool direction)
+{
+    if (!direction)
+    {
+        sndHvr.play();
+        if (scaleFactor == 2)
+        {
+            scaleFactor = maxScale;
+        }
+        else
+        {
+            scaleFactor--;
+        }
+        plrStr->setCharacterSize(fontSize * scaleFactor);
+        diffStr->setCharacterSize(fontSize * scaleFactor);
+        diffStr->setPosition(pixelToTile(prefsX),pixelToTile(prefsY));
+        plrStr->setPosition(pixelToTile(prefsX+plrXDeltaGlobal),pixelToTile(prefsY+2));
+        updScreenSize();
+    }
+    else
+    {
+        sndHvr.play();
+        if (scaleFactor == maxScale)
+        {
+            scaleFactor = 2;
+        }
+        else
+        {
+            scaleFactor++;
+        }
+        plrStr->setCharacterSize(fontSize * scaleFactor);
+        diffStr->setCharacterSize(fontSize * scaleFactor);
+        diffStr->setPosition(pixelToTile(prefsX),pixelToTile(prefsY));
+        plrStr->setPosition(pixelToTile(prefsX+plrXDeltaGlobal),pixelToTile(prefsY+2));
+        updScreenSize();
+    }
+}
+
 void prefsScreen()
 {
+    diffStr = new sf::Text(templateText);
+    plrStr = new sf::Text(templateText);
     music.openFromFile(lsTrack);
     music.play();
     menuIndex = 0;
     fadeRect.setFillColor(sf::Color::Black);
-    sf::Text diffStr(templateText);
-    diffStr.setString("Difficulty:");
-    diffStr.setPosition(pixelToTile(prefsX),pixelToTile(prefsY));
-    sf::Text plrStr(templateText);
-    plrStr.setString("Player:");
-    plrStr.setPosition(pixelToTile(prefsX+plrXDeltaGlobal),pixelToTile(prefsY+2));
+    diffStr->setString("Difficulty:");
+    diffStr->setPosition(pixelToTile(prefsX),pixelToTile(prefsY));
+    plrStr->setString("Player:");
+    plrStr->setPosition(pixelToTile(prefsX+plrXDeltaGlobal),pixelToTile(prefsY+2));
     while (window.isOpen())
     {
         window.clear(sf::Color::Black);
-        window.draw(diffStr);
-        window.draw(plrStr);
+        window.draw(*diffStr);
+        window.draw(*plrStr);
         drawMenu(prefsMenu, prefsMenuAmnt);
         updConfOutline();
         screenFade(volFadeSpeed,true,fadeDark);
@@ -143,73 +232,27 @@ void prefsScreen()
             {
                 case sf::Event::Closed:
                 {
-                    window.close();
+                    exitEvent();
                     break;
                 }
                 case sf::Event::KeyPressed:
                 {
-                    if (!window.hasFocus())
-                    {
-                        break;
-                    }
                     if (e.key.scancode == sf::Keyboard::Scan::Left)
                     {
-                        sndHvr.play();
-                        if (menuIndex == 0)
-                        {
-                            menuIndex = prefsMenuAmnt-1;
-                        }
-                        else
-                        {
-                            menuIndex--;
-                        }
+                        cursorMove(false);
                     }
                     else if (e.key.scancode == sf::Keyboard::Scan::Right)
                     {
-                        sndHvr.play();
-                        if (menuIndex < prefsMenuAmnt-1)
-                        {
-                            menuIndex++;
-                        }
-                        else
-                        {
-                            menuIndex = 0;
-                        }
+                        cursorMove(true);
                     }
                     if (e.key.scancode == sf::Keyboard::Scan::Up)
-                {
-                    sndHvr.play();
-                    if (scaleFactor == 1)
                     {
-                        scaleFactor = maxScale;
+                        changeScale(false);
                     }
-                    else
+                    else if (e.key.scancode == sf::Keyboard::Scan::Down)
                     {
-                        scaleFactor--;
+                        changeScale(true);
                     }
-                    plrStr.setCharacterSize(fontSize * scaleFactor);
-                    diffStr.setCharacterSize(fontSize * scaleFactor);
-                    diffStr.setPosition(pixelToTile(prefsX),pixelToTile(prefsY));
-                    plrStr.setPosition(pixelToTile(prefsX+plrXDeltaGlobal),pixelToTile(prefsY+2));
-                    updScreenSize();
-                }
-                else if (e.key.scancode == sf::Keyboard::Scan::Down)
-                {
-                    sndHvr.play();
-                    if (scaleFactor == maxScale)
-                    {
-                        scaleFactor = 1;
-                    }
-                    else
-                    {
-                        scaleFactor++;
-                    }
-                    plrStr.setCharacterSize(fontSize * scaleFactor);
-                    diffStr.setCharacterSize(fontSize * scaleFactor);
-                    diffStr.setPosition(pixelToTile(prefsX),pixelToTile(prefsY));
-                    plrStr.setPosition(pixelToTile(prefsX+plrXDeltaGlobal),pixelToTile(prefsY+2));
-                    updScreenSize();
-                }
                     if (e.key.scancode == sf::Keyboard::Scan::Enter)
                     {
                         sndCnf.play();
@@ -217,9 +260,77 @@ void prefsScreen()
                     }
                     else if (e.key.scancode == sf::Keyboard::Scan::Escape)
                     {
-                        sndBack.play();
                         menuIndex = 7;
+                        sndBack.play();
                         selectMenuPrefs();
+                    }
+                    break;
+                }
+                case sf::Event::JoystickButtonPressed:
+                {
+                    if (!window.hasFocus())
+                    {
+                        break;
+                    }
+                    switch (e.joystickButton.button)
+                    {
+                        case buttonCross:
+                        {
+                            sndCnf.play();
+                            selectMenuPrefs();
+                            break;
+                        }
+                        case buttonCircle:
+                        {
+                            menuIndex = 7;
+                            sndBack.play();
+                            selectMenuPrefs();
+                            break;
+                        }
+                        case buttonL1:
+                        {
+                            changeScale(false);
+                            break;
+                        }
+                        case buttonR1:
+                        {
+                            changeScale(true);
+                            break;
+                        }
+                        default:
+                        {
+                            break;
+                        }
+                    }
+                    break;
+                }
+                case sf::Event::JoystickMoved:
+                {
+                    if (!window.hasFocus())
+                    {
+                        break;
+                    }
+                    if (e.joystickMove.axis == axisDPADX)
+                    {
+                        if (e.joystickMove.position == -100)
+                        {
+                            cursorMove(false);
+                        }
+                        else if (e.joystickMove.position == 100)
+                        {
+                            cursorMove(true);
+                        }
+                    }
+                    else if (e.joystickMove.axis == axisDPADY)
+                    {
+                        if (e.joystickMove.position == -100)
+                        {
+                            cursorMove(false);
+                        }
+                        else if (e.joystickMove.position == 100)
+                        {
+                            cursorMove(true);
+                        }
                     }
                     break;
                 }
