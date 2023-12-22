@@ -37,6 +37,10 @@ and you will have an executable binary.
 
 ### On Windows
 
+#### Important Note 2
+
+Windows building does not currently work. Will fix later, and also may shove SFML into a submodule.
+
 1. Download SFML 2.6.0 for your target architecture and Visual Studio version, and extract the `SFML-2.6.0` directory to the root of your C: drive.
 
 2. Copy all DLL files from `SFML-2.6.0\bin` to the root of the repository.
