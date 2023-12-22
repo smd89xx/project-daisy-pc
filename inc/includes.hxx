@@ -5,7 +5,8 @@
 #include <iomanip>
 #include <thread>
 #include <sstream>
-#include <zlib.h>
+#include "CRCpp/inc/CRC.h"
+#include <box2d/box2d.h>
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
@@ -14,6 +15,7 @@
 #include "resources.hxx"
 #include "version.hxx"
 #include "structs.hxx"
+#include "savescrn.hxx"
 #include "title.hxx"
 #include "jukebox.hxx"
 #include "prefs.hxx"

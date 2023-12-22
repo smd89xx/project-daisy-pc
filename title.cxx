@@ -1,20 +1,19 @@
 #include "inc/includes.hxx"
 
 const types::u8 titleX = 2;
-const types::u8 titleY = 22;
-const types::u8 titleOptAmnt = 5;
+const types::u8 titleY = 20;
+const types::u8 titleOptAmnt = 4;
 const sf::IntRect titleCurRects[] = {{titleX,titleY,0,0}};
 
 const structs::Option titleMenu[] = 
 {
-    {titleX,titleY,"Start Game"},
-    {titleX+10,titleY,"Continue Game"},
-    {titleX+22,titleY,"Statistics"},
-    {titleX+31,titleY,"Preferences"},
-    {titleX+41.75,titleY,"Exit Game"},
+    {titleX,titleY,"Save Select"},
+    {titleX,titleY+1.25,"Statistics"},
+    {titleX,titleY+2.5,"Preferences"},
+    {titleX,titleY+3.75,"Exit Game"},
 };
 
-static void selectMenuTitle()
+static void selectMenuTitle(bool exit)
 {
     fadeRect.setFillColor(sf::Color::White);
     float volume = music.getVolume();
@@ -40,40 +39,14 @@ static void selectMenuTitle()
             }
         }
     }
-    switch (menuIndex)
+    if (!exit)
     {
-        case 0:
-        {
-            level = 0;
-            lives = 5;
-            score = 0;
-            gameInit();
-            break;
-        }
-        case 1:
-        {
-            level = saveRAM[addrLevel];
-            lives = saveRAM[addrLives];
-            score = readSRAM_u32(addrScore);
-            gameInit();
-            break;
-        }
-        case 3:
-        {
-            prefsScreen();
-            break;
-        }
-        case 4:
-        {
-            updSRAM();
-            window.close();
-            break;
-        }
-        default:
-        {
-            printerr(missingFuncErr,"selectMenuTitle()");
-            break;
-        }
+        saveScreen();
+    }
+    else
+    {
+        updSRAM();
+        window.close();
     }
 }
 
@@ -105,12 +78,6 @@ static void moveCursor(bool direction)
     }
 }
 
-static void callSelect()
-{
-    sndCnf.play();
-    selectMenuTitle();
-}
-
 void title()
 {
     fadeRect.setFillColor(sf::Color::Black);
@@ -122,28 +89,34 @@ void title()
     music.openFromFile(titleTrack);
     music.setLoop(true);
     music.play();
-    sf::Text copyInfo(templateText);
-    sf::Text versionText(templateText);
-    copyInfo.setString(L"©TheWindowsPro98 2023");
-    copyInfo.setPosition(0,pixelToTile(29));
-    versionText.setString(versionCombined);
-    versionText.setPosition(pixelToTile(6.75),pixelToTile(6));
     sf::Texture titleTexture;
     titleTexture.loadFromFile(titleImg);
-    titleTexture.setSmooth(true);
     sf::RectangleShape titleSprite(sf::Vector2f(titleTexture.getSize()));
     titleSprite.setTexture(&titleTexture);
     sf::Vector2f titleImgSize(320 * scaleFactor, 48 * scaleFactor);
     titleSprite.setSize(titleImgSize);
     titleSprite.setPosition(pixelToTile(7),0);
-    float volume = 100;
+    types::u32 color = RGB4toRGB8(0x0224);
+    sf::Texture titleBGTexture;
+    titleBGTexture.loadFromFile(titleBG);
+    sf::RectangleShape titleRect;
+    titleRect.setTexture(&titleBGTexture);
+    titleRect.setSize(sf::Vector2f(window.getSize()));
     while (window.isOpen())
     {
-        window.clear(sf::Color::Black);
-        window.draw(copyInfo);
-        window.draw(versionText);
+        window.clear(sf::Color(color));
+        window.draw(titleRect);
+        drawBitmapFont("}TheWindowsPro98 2023",{0,29});
+        drawBitmapFont(versionCombined,{6.75,6});
+        if (sf::Joystick::isConnected(0))
+        {
+            drawBitmapFont("Press START Button",{17.625,15});
+        }
+        else
+        {
+            drawBitmapFont("Press ENTER Key",{19.125,15});
+        }
         window.draw(titleSprite);
-        drawMenu(titleMenu,titleOptAmnt);
         screenFade(volFadeSpeed,true,fadeDark);
         window.display();
         while (window.pollEvent(e))
@@ -158,24 +131,15 @@ void title()
             }
             case sf::Event::KeyPressed:
             {
-                if (e.key.scancode == sf::Keyboard::Scan::Left)
-                {
-                    moveCursor(false);
-                }
-                else if (e.key.scancode == sf::Keyboard::Scan::Right)
-                {
-                    moveCursor(true);
-                }
                 if (e.key.scancode == sf::Keyboard::Scan::Enter)
                 {
                     sndCnf.play();
-                    selectMenuTitle();
+                    selectMenuTitle(false);
                 }
                 else if (e.key.scancode == sf::Keyboard::Scan::Escape)
                 {
-                    menuIndex = 4;
                     sndBack.play();
-                    selectMenuTitle();
+                    selectMenuTitle(true);
                 }
                 break;
             }
@@ -187,41 +151,21 @@ void title()
                 }
                 switch (e.joystickButton.button)
                 {
-                    case buttonCross:
+                    case buttonOptions:
                     {
                         sndCnf.play();
-                        selectMenuTitle();
+                        selectMenuTitle(false);
                         break;
                     }
                     case buttonCircle:
                     {
-                        menuIndex = 4;
                         sndBack.play();
-                        selectMenuTitle();
+                        selectMenuTitle(true);
                         break;
                     }
                     default:
                     {
                         break;
-                    }
-                }
-                break;
-            }
-            case sf::Event::JoystickMoved:
-            {
-                if (!window.hasFocus())
-                {
-                    break;
-                }
-                if (e.joystickMove.axis == axisDPADX)
-                {
-                    if (e.joystickMove.position == -100)
-                    {
-                        moveCursor(false);
-                    }
-                    else if (e.joystickMove.position == 100)
-                    {
-                        moveCursor(true);
                     }
                 }
                 break;

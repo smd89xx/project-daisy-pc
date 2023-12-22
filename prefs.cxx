@@ -1,53 +1,41 @@
 #include "inc/includes.hxx"
 
 types::u8 menuIndex;
-const types::u8 prefsX = 10;
-const types::u8 prefsY = 12;
-const types::u8 diffXDelta = 9;
-const types::u8 plrXDelta = 7;
-const types::u8 plrXDeltaGlobal = 6;
+const types::u8 prefsX = 14;
+const types::u8 prefsY = 9;
+const types::u8 diffXDelta = 15;
+const types::u8 plrXDelta = 15;
+const types::u8 jukeboXDelta = 6;
+const float exitXDelta = jukeboXDelta + 3.75;
 const types::u8 prefsMenuAmnt = 8;
-bool player = true; // False = Lucy, True = Stephanie
-types::u8 difficulty = 1; // 0 = Easy, 1 = Normal, 2 = Hard, 3 = Legend (all names subject to change)
 const structs::Option prefsMenu[] = 
 {
     {prefsX+diffXDelta, prefsY, "Easy"},
-    {prefsX+5+diffXDelta, prefsY, "Normal"},
-    {prefsX+12+diffXDelta, prefsY, "Hard"},
-    {prefsX+17+diffXDelta, prefsY, "Legend"},
-    {prefsX+plrXDelta + plrXDeltaGlobal, prefsY+2, "Lucy"},
-    {prefsX+5+plrXDelta + plrXDeltaGlobal, prefsY+2, "Stephanie"},
-    {prefsX+11,prefsY+4,"The Jukebox"},
-    {prefsX+14.25, prefsY+6, "Exit"}
+    {prefsX+diffXDelta, prefsY+1.25, "Normal"},
+    {prefsX+diffXDelta, prefsY+2.5, "Hard"},
+    {prefsX+diffXDelta, prefsY+3.75, "Legend"},
+    {prefsX+plrXDelta, prefsY+6.25, "Lucy"},
+    {prefsX+plrXDelta, prefsY+7.5, "Stephanie"},
+    {prefsX+jukeboXDelta,prefsY+10,"The Jukebox"},
+    {prefsX+exitXDelta, prefsY+12.5, "Exit"}
 };
-sf::Text* diffStr;
-sf::Text* plrStr;
 
 static void updConfOutline()
 {
-    types::u8 playerIndex = player + 4;
-    sf::Text diffConf(templateText);
-    sf::Text plrConf(templateText);
-    plrConf.setOutlineColor(playerColors[!player]);
-    diffConf.setOutlineColor(playerColors[!player]);
-    plrConf.setString(prefsMenu[playerIndex].label);
-    plrConf.setPosition(pixelToTile(prefsMenu[playerIndex].x),pixelToTile(prefsMenu[playerIndex].y));
-    diffConf.setString(prefsMenu[difficulty].label);
-    diffConf.setPosition(pixelToTile(prefsMenu[difficulty].x),pixelToTile(prefsMenu[difficulty].y));
+    types::u8 playerIndex = saveSlots[slotIndex].player + 4;
+    sf::RectangleShape diffConf({8,8});
+    diffConf.setScale(scaleFactor,scaleFactor);
+    diffConf.setTexture(&cursorTexture);
+    diffConf.setFillColor(playerColors[!saveSlots[slotIndex].player]);
+    sf::RectangleShape plrConf(diffConf);
+    plrConf.setPosition(pixelToTile(prefsMenu[playerIndex].x - 1),pixelToTile(prefsMenu[playerIndex].y));
+    diffConf.setPosition(pixelToTile(prefsMenu[saveSlots[slotIndex].difficulty].x - 1),pixelToTile(prefsMenu[saveSlots[slotIndex].difficulty].y));
     window.draw(plrConf);
     window.draw(diffConf);
 }
 
-static void clearMem()
-{
-    delete diffStr;
-    delete plrStr;
-}
-
 static void exitEvent()
 {
-    saveRAM[addrDifficulty] = difficulty;
-    saveRAM[addrPlayer] = player;
     saveRAM[addrScaling] = scaleFactor;
     updSRAM();
     window.close();
@@ -85,55 +73,58 @@ static void selectMenuPrefs()
     {
         case 0:
         {
-            difficulty = 0;
+            saveSlots[slotIndex].difficulty = 0;
             break;
         }
         case 1:
         {
-            difficulty = 1;
+            saveSlots[slotIndex].difficulty = 1;
             break;
         }
         case 2:
         {
-            difficulty = 2;
+            saveSlots[slotIndex].difficulty = 2;
             break;
         }
         case 3:
         {
-            difficulty = 3;
+            saveSlots[slotIndex].difficulty = 3;
             break;
         }
         case 4:
         {
-            player = false;
+            saveSlots[slotIndex].player = false;
             break;
         }
         case 5:
         {
-            player = true;
+            saveSlots[slotIndex].player = true;
             break;
         }
         case 6:
         {
             menuIndex = 0;
-            clearMem();
             jukebox();
             break;
         }
         case 7:
         {
-            saveRAM[addrDifficulty] = difficulty;
-            saveRAM[addrPlayer] = player;
             saveRAM[addrScaling] = scaleFactor;
-            menuIndex = 3;
-            clearMem();
-            title();
+            menuIndex = 0;
+            if (slotIndex == maxSlots)
+            {
+                slotIndex = 0;
+            }
+            else
+            {
+                saveSlots[slotIndex].writeToSRAM(addrSaves+(slotIndex*10));
+            }
+            saveScreen();
             break;
         }
         default:
         {
-            clearMem();
-            printerr(missingFuncErr);
+            printerr(missingFuncErr,"selectMenuPrefs()");
             break;
         }
     }
@@ -172,7 +163,7 @@ static void changeScale(bool direction)
     if (!direction)
     {
         sndHvr.play();
-        if (scaleFactor == 2)
+        if (scaleFactor == 1)
         {
             scaleFactor = maxScale;
         }
@@ -180,10 +171,6 @@ static void changeScale(bool direction)
         {
             scaleFactor--;
         }
-        plrStr->setCharacterSize(fontSize * scaleFactor);
-        diffStr->setCharacterSize(fontSize * scaleFactor);
-        diffStr->setPosition(pixelToTile(prefsX),pixelToTile(prefsY));
-        plrStr->setPosition(pixelToTile(prefsX+plrXDeltaGlobal),pixelToTile(prefsY+2));
         updScreenSize();
     }
     else
@@ -191,39 +178,48 @@ static void changeScale(bool direction)
         sndHvr.play();
         if (scaleFactor == maxScale)
         {
-            scaleFactor = 2;
+            scaleFactor = 1;
         }
         else
         {
             scaleFactor++;
         }
-        plrStr->setCharacterSize(fontSize * scaleFactor);
-        diffStr->setCharacterSize(fontSize * scaleFactor);
-        diffStr->setPosition(pixelToTile(prefsX),pixelToTile(prefsY));
-        plrStr->setPosition(pixelToTile(prefsX+plrXDeltaGlobal),pixelToTile(prefsY+2));
         updScreenSize();
     }
 }
 
 void prefsScreen()
 {
-    diffStr = new sf::Text(templateText);
-    plrStr = new sf::Text(templateText);
     music.openFromFile(lsTrack);
     music.play();
     menuIndex = 0;
     fadeRect.setFillColor(sf::Color::Black);
-    diffStr->setString("Difficulty:");
-    diffStr->setPosition(pixelToTile(prefsX),pixelToTile(prefsY));
-    plrStr->setString("Player:");
-    plrStr->setPosition(pixelToTile(prefsX+plrXDeltaGlobal),pixelToTile(prefsY+2));
+    std::stringstream scalePromptCmb;
+    std::string emptyString = "";
+    std::string scalePromptMainTxt = ": +/- scaling";
+    std::string scaleFactorStr = " (Current scale factor: ";
+    types::u32 color = RGB4toRGB8(0x224);
     while (window.isOpen())
     {
-        window.clear(sf::Color::Black);
-        window.draw(*diffStr);
-        window.draw(*plrStr);
-        drawMenu(prefsMenu, prefsMenuAmnt);
+        if (sf::Joystick::isConnected(0))
+        {
+            scalePromptCmb.str(emptyString);
+            scalePromptCmb << btnPrompts[buttonL1] << "/" << btnPrompts[buttonR1] << scalePromptMainTxt << scaleFactorStr << (types::u16)scaleFactor << ")";
+        }
+        else
+        {
+            scalePromptCmb.str(emptyString);
+            scalePromptCmb << "L/R" << scalePromptMainTxt << scaleFactorStr << (types::u16)scaleFactor << ")";
+        }
+        window.clear(sf::Color(color));
+        drawBitmapFont("Difficulty:",{prefsX,prefsY});
+        drawBitmapFont("Player:",{prefsX,prefsY+6.25});
+        drawBitmapFont(scalePromptCmb.str(),{0,29});
+        drawBitmapFont(btnPrompts[dpadUp] + "/" + btnPrompts[dpadDown] + ": Change selection",{0,28});
+        drawBitmapFont(btnPrompts[buttonCircle] + ": Exit",{0,27});
+        drawBitmapFont(btnPrompts[buttonCross] + ": Decision",{0,26});
         updConfOutline();
+        drawMenu(prefsMenu, prefsMenuAmnt);
         screenFade(volFadeSpeed,true,fadeDark);
         window.display();
         while (window.pollEvent(e))
@@ -237,19 +233,19 @@ void prefsScreen()
                 }
                 case sf::Event::KeyPressed:
                 {
-                    if (e.key.scancode == sf::Keyboard::Scan::Left)
+                    if (e.key.scancode == sf::Keyboard::Scan::Up)
                     {
                         cursorMove(false);
                     }
-                    else if (e.key.scancode == sf::Keyboard::Scan::Right)
+                    else if (e.key.scancode == sf::Keyboard::Scan::Down)
                     {
                         cursorMove(true);
                     }
-                    if (e.key.scancode == sf::Keyboard::Scan::Up)
+                    if (e.key.scancode == sf::Keyboard::Scan::Left)
                     {
                         changeScale(false);
                     }
-                    else if (e.key.scancode == sf::Keyboard::Scan::Down)
+                    else if (e.key.scancode == sf::Keyboard::Scan::Right)
                     {
                         changeScale(true);
                     }
@@ -309,17 +305,6 @@ void prefsScreen()
                     if (!window.hasFocus())
                     {
                         break;
-                    }
-                    if (e.joystickMove.axis == axisDPADX)
-                    {
-                        if (e.joystickMove.position == -100)
-                        {
-                            cursorMove(false);
-                        }
-                        else if (e.joystickMove.position == 100)
-                        {
-                            cursorMove(true);
-                        }
                     }
                     else if (e.joystickMove.axis == axisDPADY)
                     {

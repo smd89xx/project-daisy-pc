@@ -40,4 +40,28 @@ namespace structs
             types::u8 frameTime; // In NTSC frames (60 frames = 1 second)
         ~AnimMData();
     };
+    class SaveMData
+    {
+        public:
+            bool player = true;
+            types::u8 difficulty = 1;
+            types::u8 level = 0;
+            types::u8 lives = 5;
+            types::u32 score = 0;
+            types::u16 health = 760;
+        void writeToSRAM(types::u16 index);
+        SaveMData readFromSRAM(types::u16 index);
+        ~SaveMData();
+
+        private:
+            enum sramLocations
+            {
+                addrPlayer,
+                addrDifficulty,
+                addrLevel,
+                addrLives,
+                addrScore,
+                addrHealth = 8,
+            };
+    };
 }

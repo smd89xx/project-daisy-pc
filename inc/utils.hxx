@@ -25,6 +25,13 @@ extern sf::Event e;
 extern const types::u8 maxScale;
 extern std::fstream saveFile;
 extern char saveRAM[32768];
+extern sf::Texture bitmapFont;
+extern sf::Texture cursorTexture;
+extern std::string* btnPrompts;
+extern const std::string ds4Prompts[];
+extern structs::SaveMData saveSlots[9];
+extern types::u16 slotIndex;
+extern const types::u16 maxSlots;
 enum errorCodes
 {
     genericErr,
@@ -34,6 +41,7 @@ enum errorCodes
     invalidScaleErr,
     invalidPlayerErr,
     invalidChecksum,
+    invalidSRAMVersion,
 };
 
 enum ds4Buttons
@@ -65,16 +73,27 @@ enum ds4Axes
     axisDPADY, // are these mapped as axes?!
 };
 
+enum DPADStrIndxs
+{
+    dpadLeft = 13,
+    dpadRight,
+    dpadUp,
+    dpadDown,
+};
+
 enum sramLocations
 {
     addrChkSum,
-    addrPlayer = 4,
-    addrDifficulty,
-    addrScaling,
-    addrLevel,
-    addrLives,
-    addrScore,
-    addrNext = 13,
+    addrSaves = 4,
+    addrScaling = 84,
+    addrVerInf,
+};
+
+// Specifically, vendor IDs
+enum controllerIDs
+{
+    ds4VID = 32903,
+    xb1CCVID = 9414,
 };
 
 void screenFade(float speed, bool direction, float fadeTarget);
@@ -87,3 +106,7 @@ types::u32 generateSaveChkSum();
 void updSRAM();
 types::u32 readSRAM_u32(types::u16 startAddr);
 void writeSRAM_u32(types::u16 startAddr, types::u32 value);
+types::u16 readSRAM_u16(types::u16 startAddr);
+void writeSRAM_u16(types::u16 startAddr, types::u16 value);
+void drawBitmapFont(std::string text, sf::Vector2f position);
+types::u32 RGB4toRGB8(types::u16 rgb4);

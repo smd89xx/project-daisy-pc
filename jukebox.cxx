@@ -20,7 +20,7 @@ const structs::SndMData musHdr[] =
     {&hoverSFX,"Menu Hover","Game","TheWindowsPro98",false,true},
     {&confSFX,"Menu Select","Game","TheWindowsPro98",false,true},
     {&backSFX,"Menu Back","Game","TheWindowsPro98",false,true},
-    {&crashSFX,"Macintosh IIcx Crash Chime","Chimes of Death","???",false,true},
+    {&crashSFX,"Macintosh IIcx Crash Chime","Unknown Album","Unknown Artist",false,true},
     {&jumpSFX,"Jump","Game","TheWindowsPro98",false,true},
 };
 sf::SoundBuffer* sb;
@@ -124,43 +124,28 @@ void jukebox()
     snd = new sf::Sound;
     music.openFromFile(*musHdr[menuIndex].songPath);
     fadeRect.setFillColor(sf::Color::Black);
-    sf::Text songLabel(templateText);
-    songLabel.setPosition(pixelToTile(musX),pixelToTile(musY));
-    sf::Text songAlbumLabel(templateText);
-    songAlbumLabel.setPosition(pixelToTile(musX),pixelToTile(musY+1));
-    sf::Text songArtistLabel(templateText);
-    songArtistLabel.setPosition(pixelToTile(musX),pixelToTile(musY+2));
-    sf::Text songLoopLabel(templateText);
-    songLoopLabel.setPosition(pixelToTile(musX),pixelToTile(musY+4));
-    sf::Text songTypeLabel(templateText);
-    songTypeLabel.setPosition(pixelToTile(musX),pixelToTile(musY+5));
-    sf::Text songTimeElapsed(templateText);
-    songTimeElapsed.setPosition(pixelToTile(musX),pixelToTile(musY+7));
-    sf::Text songTimeTotal(templateText);
-    songTimeTotal.setPosition(pixelToTile(musX),pixelToTile(musY+8));
     std::stringstream songDurationStr;
     std::stringstream songElapsedStr;
+    const types::u8 btnY = musY + 26;
+    types::u32 color = RGB4toRGB8(0x0224);
     while(window.isOpen())
     {
         songDurationStr.str(blankString);
         songElapsedStr.str(blankString);
         songElapsedStr << std::fixed << std::showpoint << std::setprecision(3) << music.getPlayingOffset().asSeconds();
         songDurationStr << std::fixed << std::showpoint << std::setprecision(3) << music.getDuration().asSeconds();
-        songLabel.setString("Title: " + musHdr[menuIndex].songTitle);
-        songAlbumLabel.setString("Album: " + musHdr[menuIndex].songAlbum);
-        songArtistLabel.setString("Artist(s): " + musHdr[menuIndex].songArtist);
-        songLoopLabel.setString("Will Audio Loop: " + boolStrings[musHdr[menuIndex].loop]);
-        songTypeLabel.setString("Audio Type: " + musType[musHdr[menuIndex].isSFX]);
-        songTimeElapsed.setString("Elapsed Time: " + songElapsedStr.str() + timeMetric);
-        songTimeTotal.setString("Total Time: " + songDurationStr.str() + timeMetric);
-        window.clear();
-        window.draw(songLabel);
-        window.draw(songAlbumLabel);
-        window.draw(songArtistLabel);
-        window.draw(songLoopLabel);
-        window.draw(songTypeLabel);
-        window.draw(songTimeElapsed);
-        window.draw(songTimeTotal);
+        window.clear(sf::Color(color));
+        drawBitmapFont("Title: " + musHdr[menuIndex].songTitle,{musX,musY});
+        drawBitmapFont("Album: " + musHdr[menuIndex].songAlbum,{musX,musY+1});
+        drawBitmapFont("Artist(s): " + musHdr[menuIndex].songArtist,{musX,musY+2});
+        drawBitmapFont("Will Audio Loop: " + boolStrings[musHdr[menuIndex].loop],{musX,musY+4});
+        drawBitmapFont("Audio Type: " + musType[musHdr[menuIndex].isSFX],{musX,musY+5});
+        drawBitmapFont("Elapsed Time: " + songElapsedStr.str() + timeMetric,{musX,musY+7});
+        drawBitmapFont("Total Time: " + songDurationStr.str() + timeMetric,{musX,musY+8});
+        drawBitmapFont(btnPrompts[buttonSquare] + ": Pause music",{0,static_cast<float>(btnY)});
+        drawBitmapFont(btnPrompts[buttonCross] + ": (Re)start music/SFX",{0,static_cast<float>(btnY+1)});
+        drawBitmapFont(btnPrompts[buttonCircle] + ": Exit",{0,static_cast<float>(btnY+2)});
+        drawBitmapFont(btnPrompts[dpadLeft] + "/" + btnPrompts[dpadRight] + ": Change selection",{0,static_cast<float>(btnY+3)});
         screenFade(volFadeSpeed,true,fadeDark);
         window.display();
         while(window.pollEvent(e))

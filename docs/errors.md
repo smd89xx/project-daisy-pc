@@ -44,4 +44,11 @@ This can be for a variety of reasons, including corruption and intentional hex-e
 
 This error is also displayed through `std::cout`, and only when the program is starting up, so consider running the game through the terminal if it refuses to start.
 
+0x7 - Invalid Save File Version
+-------------------------------
+
+Encountered when the expected save file version and the recieved version do not match.
+
+The game currently is not aiming to maintain backwards compatibility<sup>1</sup>.
+
 <sup>1</sup>Subject to change.

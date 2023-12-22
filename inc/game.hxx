@@ -2,8 +2,6 @@
 
 #include "includes.hxx"
 
-extern types::u8 level;
-extern types::u8 lives;
-extern types::u32 score;
+extern const std::string playerNames[];
 
 void gameInit();

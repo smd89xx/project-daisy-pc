@@ -4,17 +4,16 @@ sf::RectangleShape* lvlFG;
 sf::RectangleShape* lvlBG;
 sf::Texture* lvlPxBG;
 sf::Texture* lvlPxFG;
-types::u8 level = 0;
 sf::Vector2f* cameraPositions;
 bool* isPaused;
-const types::u8 pauseX = 19;
-const types::u8 pauseY = 12;
+const types::u8 pauseX = 18;
+const types::u8 pauseY = 13;
 const types::u8 pauseOptsAmnt = 3;
 const structs::Option pauseMenu[] = 
 {
     {pauseX,pauseY,"Return to Game"},
-    {pauseX,pauseY+2,"Save and Exit"},
-    {pauseX,pauseY+4,"Exit Without Saving"}
+    {pauseX,pauseY+1.25,"Save and Exit"},
+    {pauseX,pauseY+2.5,"Exit Without Saving"}
 };
 sf::Texture* playerTexture;
 sf::Sprite* playerSprite;
@@ -25,11 +24,11 @@ const types::u8 collisionRectAmounts[] = {5};
 std::thread* collisionThread;
 structs::Directions* playerDirection;
 bool* runThread;
-float* gravity;
 bool* isJumping;
 enum cameraBoundaries {leftCamBnd = 144, rightCamBnd = 144, topCamBnd = 104, bottomCamBnd = 104};
 enum tileTypes {tileBlank, tileSolid, tileSlopeE, tileSlopeW, tileSpringN, tileRing, tileSpringE, tileSpringW};
 const sf::Vector2i playerHitboxes[] = {{0,0},{15,30}};
+const sf::Vector2i playerSizes[] = {{32,32},{32,32}};
 sf::SoundBuffer* sbGame;
 sf::Sound* sndGame;
 float* jumpStrength;
@@ -42,14 +41,17 @@ const structs::AnimMData playerAnimData[2][3] =
         {0,1,0},{1,2,15},{2,1,0},
     }
 };
+sf::Texture* hudTexture;
+sf::Texture* healthTexture;
+const std::string playerNames[] = {"Lucy","Stephanie"};
+b2Vec2* gravity;
+b2World* world;
 enum playerAnimIDs
 {
     playerIdle,
     playerWalking,
     playerJumping,
 };
-types::u8 lives = 5;
-types::u32 score = 0;
 
 static void camPos()
 {
@@ -104,7 +106,7 @@ static const sf::IntRect* loadMap()
     lvlPxFG = new sf::Texture;
     lvlBG->setSize(sf::Vector2f(window.getSize()));
     lvlFG->setSize(sf::Vector2f(window.getSize()));
-    switch (level)
+    switch (saveSlots[slotIndex].level)
     {
     case 0:
     {
@@ -122,10 +124,21 @@ static const sf::IntRect* loadMap()
     }
     default:
     {
-        printerr(badLevelErr);
+        printerr(badLevelErr,"loadMap()");
         return nullptr;
         break;
     }
+    }
+}
+
+static void manageAnim(types::u16 animIndex)
+{
+    for (types::u8 i = 0; i < playerAnimData[saveSlots[slotIndex].player][animIndex].frameAmount; i++)
+    {
+        for (types::u8 t = 0; t < playerAnimData[saveSlots[slotIndex].player][animIndex].frameTime; t++)
+        {
+            playerSprite->setTextureRect({(i * playerSizes[saveSlots[slotIndex].player].x),(animIndex * playerSizes[saveSlots[slotIndex].player].y),playerSizes[saveSlots[slotIndex].player].x,playerSizes[saveSlots[slotIndex].player].y});
+        }
     }
 }
 
@@ -133,7 +146,6 @@ static void updatePlayer()
 {
     playerPositions->x += playerVelocities->x;
     playerPositions->y += playerVelocities->y;
-    playerVelocities->y += *gravity;
     sf::Vector2f rectSize(lvlPxBG->getSize());
     rectSize.x *= scaleFactor;
     rectSize.y *= scaleFactor;
@@ -244,11 +256,6 @@ static void gameInputHdl_Joy()
     }
 }
 
-static void drawHUD()
-{
-    
-}
-
 static void gameCleanup()
 {
     delete cameraPositions;
@@ -267,10 +274,13 @@ static void gameCleanup()
     delete runThread;
     delete collisionThread;
     delete playerDirection;
-    delete gravity;
     delete isJumping;
     delete sbGame;
     delete sndGame;
+    delete healthTexture;
+    delete hudTexture;
+    delete gravity;
+    delete world;
 }
 
 static void gameBack()
@@ -282,7 +292,6 @@ static void gameBack()
 
 static void exitEvent()
 {
-    saveRAM[addrLevel] = level;
     updSRAM();
     window.close();
 }
@@ -326,20 +335,18 @@ static void selectMenuPause()
     }
     case 1:
     {
-        saveRAM[addrLevel] = level;
-        saveRAM[addrLives] = lives;
-        writeSRAM_u32(addrScore,score);
+        saveSlots[slotIndex].writeToSRAM(addrSaves+(slotIndex*10));
         gameBack();
         break;
     }
     case 2:
     {
-       gameBack();
+        gameBack();
         break;
     }
     default:
     {
-        printerr(missingFuncErr);
+        printerr(missingFuncErr,"selectMenuPause()");
         break;
     }
     }
@@ -348,13 +355,13 @@ static void selectMenuPause()
 static void spawnPlayer()
 {
     const std::string* playerTexturePath;
-    if (player)
+    if (saveSlots[slotIndex].player)
     {
         playerTexturePath = &placeholderSpr;
     }
     else
     {
-        printerr(invalidPlayerErr);
+        playerTexturePath = &placeholderSpr;
     }
     playerTexture = new sf::Texture;
     playerTexture->loadFromFile(*playerTexturePath);
@@ -366,52 +373,15 @@ static void spawnPlayer()
     playerVelocities = new sf::Vector2f(*cameraPositions);
     maxSpeed = new float(1.5);
     playerDirection = new structs::Directions;
-    gravity = new float(0.125);
     isJumping = new bool(false);
     jumpStrength = new float(16);
 }
 
 static void chkCollision(const sf::IntRect* collisionArray)
 {
-    sf::IntRect playerHitbox;
-    sf::Vector2i hitboxPosition;
-    types::u8 collisionIndex = 0;
     while(*runThread)
     {
-        if (collisionIndex == collisionRectAmounts[level])
-        {
-            collisionIndex = 0;
-        }
-        else
-        {
-            collisionIndex++;
-        }
-        hitboxPosition.x = playerPositions->x + (playerSprite->getOrigin().x - 24);
-        hitboxPosition.y = playerPositions->y - playerSprite->getOrigin().y;
-        playerHitbox = {hitboxPosition,playerHitboxes[player]};
-        bool isIntersecting = playerHitbox.intersects(collisionArray[collisionIndex]);
-        if (isIntersecting)
-        {
-            if (playerVelocities->y >= 0)
-            {
-                playerPositions->y = collisionArray[collisionIndex].top - playerSprite->getOrigin().y;
-                *isJumping = false;
-                playerVelocities->y = 0;
-            }
-            else if (playerVelocities->y < 0)
-            {
-                playerPositions->y = ((collisionArray[collisionIndex].top + collisionArray[collisionIndex].height) + playerSprite->getOrigin().y);
-                playerVelocities->y = 0;
-            }
-            if (playerDirection->right)
-            {
-                playerPositions->x = collisionArray[collisionIndex].left - (playerSprite->getOrigin().x / 2);
-            }
-            else if (playerDirection->left)
-            {
-                playerPositions->x = (collisionArray[collisionIndex].left + collisionArray[collisionIndex].width) + (playerSprite->getOrigin().x / 2);
-            }
-        }
+        
     }
 }
 
@@ -424,6 +394,10 @@ static void cursorMove(bool direction)
         {
             menuIndex = pauseOptsAmnt - 1;
         }
+        else if (menuIndex == 2 && slotIndex == maxSlots)
+        {
+            menuIndex = 0;
+        }
         else
         {
             menuIndex--;
@@ -435,6 +409,10 @@ static void cursorMove(bool direction)
         if (menuIndex >= pauseOptsAmnt - 1)
         {
             menuIndex = 0;
+        }
+        else if (menuIndex == 0 && slotIndex == maxSlots)
+        {
+            menuIndex += 2;
         }
         else
         {
@@ -449,12 +427,66 @@ static void jump()
     {
         return;
     }
+    manageAnim(playerJumping);
     sbGame->loadFromFile(jumpSFX);
     sndGame->setBuffer(*sbGame);
     sndGame->play();
     playerPositions->y -= 5;
     playerVelocities->y -= *jumpStrength;
     *isJumping = true;
+}
+
+static void drawHUD()
+{
+    sf::RectangleShape hudIcon{sf::Vector2f(hudTexture->getSize())};
+    hudIcon.setScale(scaleFactor,scaleFactor);
+    hudIcon.setTexture(hudTexture);
+    drawBitmapFont(playerNames[saveSlots[slotIndex].player],{2,0});
+    std::stringstream scoreStr;
+    scoreStr << "{" << std::setfill('0') << std::setw(8) << saveSlots[slotIndex].score;
+    drawBitmapFont(scoreStr.str(),{12,0});
+    sf::RectangleShape healthbar(sf::Vector2f(152,8));
+    healthbar.setScale(scaleFactor,scaleFactor);
+    healthbar.setTexture(healthTexture);
+    healthbar.setTextureRect({0,0,8,8});
+    healthbar.setPosition(sf::Vector2f(pixelToTile(2),pixelToTile(1)));
+    sf::RectangleShape healthMeter(healthbar);
+    healthMeter.setTextureRect({16,0,8,8});
+    healthMeter.setFillColor(playerColors[saveSlots[slotIndex].player]);
+    healthMeter.setSize(sf::Vector2f(saveSlots[slotIndex].health/5,8));
+    sf::RectangleShape healthCap({8,8});
+    healthCap.setScale(scaleFactor,scaleFactor);
+    healthCap.setTexture(healthTexture);
+    healthCap.setTextureRect({8,0,8,8});
+    healthCap.setPosition(pixelToTile(21),pixelToTile(1));
+    std::stringstream livesStr;
+    livesStr << "|" << std::setfill('0') << std::setw(3) << (types::u16)saveSlots[slotIndex].lives;
+    drawBitmapFont(livesStr.str(),{21.5,1});
+    std::stringstream pxStr;
+    pxStr << "PX: " << std::showpoint << std::fixed << std::setprecision(3) << playerPositions->x;
+    drawBitmapFont(pxStr.str(),{0,2});
+    std::stringstream pyStr;
+    pyStr << "PY: " << std::showpoint << std::fixed << std::setprecision(3) << playerPositions->y;
+    drawBitmapFont(pyStr.str(),{0,3});
+    std::stringstream cxStr;
+    cxStr << "PX: " << std::showpoint << std::fixed << std::setprecision(3) << cameraPositions->x;
+    drawBitmapFont(cxStr.str(),{0,4});
+    std::stringstream cyStr;
+    cyStr << "PY: " << std::showpoint << std::fixed << std::setprecision(3) << cameraPositions->y;
+    drawBitmapFont(cyStr.str(),{0,5});
+    window.draw(hudIcon);
+    window.draw(healthbar);
+    window.draw(healthMeter);
+    window.draw(healthCap);
+}
+
+static void initHUD()
+{
+    hudTexture = new sf::Texture;
+    healthTexture = new sf::Texture;
+    sf::IntRect iconTextureRect = {16*saveSlots[slotIndex].player,0,16,16};
+    hudTexture->loadFromFile(hudIcons,iconTextureRect);
+    healthTexture->loadFromFile(barImg);
 }
 
 void gameInit()
@@ -465,8 +497,11 @@ void gameInit()
     runThread = new bool(true);
     sbGame = new sf::SoundBuffer;
     sndGame = new sf::Sound;
+    gravity = new b2Vec2(0,-10);
+    world = new b2World(*gravity);
     spawnPlayer();
     const sf::IntRect* collisionArray = loadMap();
+    initHUD();
     collisionThread = new std::thread(chkCollision,collisionArray);
     while (window.isOpen())
     {
@@ -488,10 +523,10 @@ void gameInit()
         {
             fadeMusic(true,volFadeSpeed,50);
             screenFade(volFadeSpeed*3,false,0x7F);
-        }
-        if (*isPaused)
-        {
             drawMenu(pauseMenu,pauseOptsAmnt);
+            drawBitmapFont(btnPrompts[dpadUp] + "/" + btnPrompts[dpadDown] + ": Change selection",{0,29});
+            drawBitmapFont(btnPrompts[buttonOptions] + ": Unpause",{0,28});
+            drawBitmapFont(btnPrompts[buttonCross] + ": Decision",{0,27});
         }
         window.display();
         while (window.pollEvent(e))

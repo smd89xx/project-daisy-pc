@@ -21,7 +21,7 @@ const types::u8 fadeDark = 0xFF;
 const types::u8 fadeLight = 0x00;
 types::u8 scaleFactor = 3;
 const types::u8 maxScale = 5;
-const sf::Vector2u screenSizes[] = {{426,240},{853,480},{1280,720},{1707,960},{2133,1200}};
+const sf::Vector2u screenSizes[] = {{426,240},{854,480},{1280,720},{1708,960},{2134,1200}};
 sf::Event e;
 const types::u8 bsodTextLines = 2;
 const std::string bsodText[] = {"Your game ran into a problem and needs to restart.","Press any key or joypad button to restart."};
@@ -29,11 +29,18 @@ const types::u8 bsodX = 6;
 const types::u8 bsodY = 5;
 const types::u8 bsodSubTxtLines[] = {2,4};
 const std::string bsodSubTxt[] = {"For more information about this issue and possible fixes, visit","https://github.com/TheWindowsPro98/project-daisy-pc/blob/main/docs/errors.md","If you contact the developer (don't), give him this info:","Stop Code (String):","Stop Code (Hex):","What Failed:"};
-const std::string bsodStopStrings[] = {"Generic error.","Requested feature was not found.","Level ID is outside valid range.","Game assets are missing.","Game scaling is not within the valid range.","Player ID is outside valid range.","Save file checksum and expected checksum do not match. Save data may be corrupted."};
+const std::string bsodStopStrings[] = {"Generic error.","Requested feature was not found.","Level ID is outside valid range.","Game assets are missing.","Game scaling is not within the valid range.","Player ID is outside valid range.","Save file checksum and expected checksum do not match.","Save file version and expected version do not match."};
 const char lineEnd = '\n';
 const char space = ' ';
 std::fstream saveFile;
 char saveRAM[32768];
+sf::Texture bitmapFont;
+sf::Texture cursorTexture;
+std::string* btnPrompts;
+const std::string ds4Prompts[] = {"Cross","Circle","Triangle","Square","L1","R1","L2","R2","Share","Options","PS Button","L3","R3","DPAD Left","DPAD Right","DPAD Up","DPAD Down"};
+structs::SaveMData saveSlots[9];
+const types::u16 maxSlots = 8;
+types::u16 slotIndex = 0;
 
 /// @brief Fades the screen in or out.
 /// @param speed Speed of the fade. Bigger value = faster fade.
@@ -70,15 +77,13 @@ void drawMenu(const structs::Option* option, types::u8 length)
     for (types::u8 i = 0; i < length; i++)
     {
         structs::Option o(option[i]);
-        sf::Text optionLabel(templateText);
-        optionLabel.setString(o.label);
-        optionLabel.setPosition(pixelToTile(o.x),pixelToTile(o.y));
-        window.draw(optionLabel);
-        sf::Text selectedLabel(templateText);
-        selectedLabel.setString(option[menuIndex].label);
-        selectedLabel.setPosition(pixelToTile(option[menuIndex].x),pixelToTile(option[menuIndex].y));
-        selectedLabel.setOutlineColor(playerColors[player]);
-        window.draw(selectedLabel);
+        drawBitmapFont(o.label,{o.x,o.y});
+        sf::RectangleShape cursor(sf::Vector2f(8,8));
+        cursor.setTexture(&cursorTexture);
+        cursor.setScale(scaleFactor,scaleFactor);
+        cursor.setPosition(pixelToTile(option[menuIndex].x - 1),pixelToTile(option[menuIndex].y));
+        cursor.setFillColor(playerColors[saveSlots[slotIndex].player]);
+        window.draw(cursor);
     }
 }
 
@@ -116,10 +121,64 @@ float pixelToTile(float pos)
     return pos * (fontSize * scaleFactor);
 }
 
-static void resetGame()
+static void resetGame(int error)
 {
-    font.loadFromFile(blazeTTF);
-    font.setSmooth(false);
+    switch (error)
+    {
+    case invalidSRAMVersion:
+    {
+        if ((saveRAM[addrVerInf] == 1) && saveVersion == 2)
+        {
+            bool player = saveRAM[4];
+            types::u8 difficulty = saveRAM[5];
+            types::u8 level = saveRAM[7];
+            types::u8 lives = saveRAM[8];
+            types::u32 score = readSRAM_u32(9);
+            saveSlots[0].difficulty = difficulty;
+            saveSlots[0].level = level;
+            saveSlots[0].lives = lives;
+            saveSlots[0].player = player;
+            saveSlots[0].score = score;
+            for (types::u8 i = 0; i < maxSlots; i++)
+            {
+                saveSlots[i].writeToSRAM(4+(i*8));
+            }
+            updSRAM();
+        }
+        switch (saveRAM[addrVerInf])
+        {
+            default:
+            {
+                saveRAM[addrVerInf] = saveVersion;
+                updSRAM();
+                break;
+            }
+        }
+
+        break;
+    }
+    case invalidChecksum:
+    {
+        updSRAM();
+        break;
+    }
+    case invalidScaleErr:
+    {
+        scaleFactor = 1;
+        updScreenSize();
+        break;
+    }
+    case invalidPlayerErr:
+    {
+        saveSlots[slotIndex].player = true;
+        break;
+    }
+    default:
+    {
+        title();
+        break;
+    }
+    }
     title();
 }
 
@@ -145,7 +204,7 @@ static void fallback_printerr(int error, std::string file)
     {
         cout << lineEnd << "If you intentionally modified your save file, here is the corrected checksum (overwrite first 4 bytes):" << lineEnd;
         types::u32 checksum = generateSaveChkSum();
-        cout << "0x" << hex << setfill('0') << setw(types::varSizes::var8Bit*2) << uppercase << checksum << endl;
+        cout << "0x" << hex << setfill('0') << setw(types::varSizes::var32Bit*2) << uppercase << checksum << endl;
     }
     exit(1);
 }
@@ -159,11 +218,12 @@ void printerr(int error, std::string file, bool fallback)
     sf::Texture bsodQRPx;
     sf::Texture bsodFrownPx;
     sf::SoundBuffer sbSad;
-    bool assetsFailed = font.loadFromFile(scpTTF) & bsodFrownPx.loadFromFile(bsodFrown) & bsodQRPx.loadFromFile(bsodQR) & sbSad.loadFromFile(crashSFX);
+    bool assetsFailed = bsodFrownPx.loadFromFile(bsodFrown) & bsodQRPx.loadFromFile(bsodQR) & sbSad.loadFromFile(crashSFX);
     if (!assetsFailed || fallback)
     {
         fallback_printerr(error,file);
     }
+    music.stop();
     sf::Sound sndSad;
     sndSad.setBuffer(sbSad);
     sndSad.play();
@@ -219,7 +279,7 @@ void printerr(int error, std::string file, bool fallback)
     bsodDrawablePtr.setPosition(pixelToTile(bsodX+11.35),pixelToTile(bsodY+18));
     while (window.isOpen())
     {
-        window.clear(sf::Color(0x00000000));
+        window.clear(sf::Color::Black);
         window.draw(bsodFrownDrawable);
         window.draw(bsodQRDrawable);
         for (types::u8 i = 0; i < bsodTextLines; i++)
@@ -250,7 +310,7 @@ void printerr(int error, std::string file, bool fallback)
                 case sf::Event::KeyPressed:
                 {
                     sndSad.stop();
-                    resetGame();
+                    resetGame(error);
                     break;
                 }
                 case sf::Event::JoystickButtonPressed:
@@ -260,7 +320,7 @@ void printerr(int error, std::string file, bool fallback)
                         break;
                     }
                     sndSad.stop();
-                    resetGame();
+                    resetGame(error);
                     break;
                 }
                 default:
@@ -300,7 +360,7 @@ types::u32 generateSaveChkSum()
     {
         sramNoChkSum[i] = saveRAM[i+4];
     }
-    types::u32 checksum = crc32(checksum,(types::u8*)sramNoChkSum,sizeof(sramNoChkSum));
+    types::u32 checksum = CRC::Calculate(sramNoChkSum,sizeof(sramNoChkSum),CRC::CRC_32());
     writeSRAM_u32(addrChkSum,checksum);
     return checksum;
 }
@@ -316,7 +376,7 @@ void updSRAM()
 
 /// @brief Reads a 32-bit value from the save RAM.
 /// @param startAddr First byte to read from.
-/// @return A 32-bit number from the save RAM.
+/// @return A 32-bit number from the specified location in the save RAM.
 types::u32 readSRAM_u32(types::u16 startAddr)
 {
     types::u32 dword = 0;
@@ -338,4 +398,65 @@ void writeSRAM_u32(types::u16 startAddr, types::u32 value)
     saveRAM[startAddr+2] = valueByte[1];
     saveRAM[startAddr+1] = valueByte[2];
     saveRAM[startAddr] = valueByte[3];
+}
+
+/// @brief Reads a 16-bit value from the save RAM.
+/// @param startAddr First byte to read from. 
+/// @return A 16-bit value from the specified location in the save RAM.
+types::u16 readSRAM_u16(types::u16 startAddr)
+{
+    types::u16 word = 0;
+    types::u8* byte = (types::u8*)&word;
+    byte[0] = saveRAM[startAddr+1];
+    byte[1] = saveRAM[startAddr];
+    return word;
+}
+
+/// @brief Writes a 16-bit value to the save RAM.
+/// @param startAddr First byte to write to.
+/// @param value The 16-bit value to write.
+void writeSRAM_u16(types::u16 startAddr, types::u16 value)
+{
+    types::u8* valueByte = (types::u8*)&value;
+    saveRAM[startAddr+1] = valueByte[0];
+    saveRAM[startAddr] = valueByte[1];
+}
+
+/// @brief Draws text using a bitmap font instead of a TrueType font.
+/// @param text String to draw.
+/// @param position Position of string.
+void drawBitmapFont(std::string text, sf::Vector2f position)
+{
+    position.x *= scaleFactor;
+    position.y *= scaleFactor;
+    for (types::u16 i = 0; i < text.length(); i++)
+    {
+        sf::RectangleShape character(sf::Vector2f(8,8));
+        character.setScale(scaleFactor,scaleFactor);
+        character.setPosition(pixelToTile((position.x/scaleFactor)+i),pixelToTile(position.y/scaleFactor));
+        character.setTexture(&bitmapFont);
+        character.setTextureRect({8*(text.c_str()[i] - 0x20),0,8,8});
+        window.draw(character);
+    }
+}
+
+/// @brief Converts a 4bpc color to an 8bpc color.
+/// @param rgb3 Color to convert.
+/// @return Color in 8bpc format
+types::u32 RGB4toRGB8(types::u16 rgb4)
+{
+    types::u32 rgb8 = 0x000000FF;
+    types::u8 r,g,b;
+    r = rgb4 >> 8;
+    g = rgb4 >> 4;
+    b = (types::u8)rgb4;
+    r = r << 4;
+    g = g << 4;
+    b = b << 4;
+    types::u8* channels = (types::u8*)&rgb8;
+    channels[3] = r + (r >> 4);
+    channels[2] = g + (g >> 4);
+    channels[1] = b + (b >> 4);
+    channels[0] = 0xFF;
+    return rgb8;
 }
