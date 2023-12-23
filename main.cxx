@@ -1,15 +1,7 @@
 #include "inc/includes.hxx"
 
-const std::string functionNames[] = {"main()","initAssets()","chkJoypadVendor()"};
 const char dot = '.';
 const char space = ' ';
-
-enum functionNameIndxs
-{
-    mainFunction,
-    assetFunction,
-    joyFunction,
-};
 
 static void initAssets()
 {
@@ -23,7 +15,7 @@ static void initAssets()
     bool assetsChk = icon.loadFromFile(favicon) & font.loadFromFile(scpTTF) & sbHvr.loadFromFile(hoverSFX) & sbCnf.loadFromFile(confSFX) & sbBack.loadFromFile(backSFX) & bitmapFont.loadFromFile(pixelFont) & cursorTexture.loadFromFile(cursorImg);
     if (!assetsChk)
     {
-        printerr(missingAssetsErr,functionNames[assetFunction],true);
+        printerr(missingAssetsErr,"initAssets()",true);
     }
     window.setIcon(icon.getSize().x,icon.getSize().y,icon.getPixelsPtr());
     font.setSmooth(false);
@@ -78,7 +70,7 @@ static void chkChecksum()
     }
     if (ogChkSum != checksum)
     {
-        printerr(invalidChecksum,functionNames[mainFunction],true);
+        printerr(invalidChecksum,"chkChecksum()",true);
     }
 }
 
@@ -102,11 +94,11 @@ static void chkJoypadVendor()
         {
             if (joyConnected)
             {
-                printerr(genericErr,functionNames[joyFunction]);
+                printerr(missingAssetsErr,"chkJoypadVendor()");
             }
             else
             {
-                
+                btnPrompts = (std::string*)ds4Prompts;
             }
             break;
         }
@@ -124,7 +116,7 @@ int main(int argc, char** argv)
     updScreenSize();
     if (saveVersion_SRAM != saveVersion)
     {
-        printerr(invalidSRAMVersion,functionNames[mainFunction]);
+        printerr(invalidSRAMVersion,"main(int,char**)");
     }
     title();
     return 0;

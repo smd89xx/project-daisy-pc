@@ -188,36 +188,45 @@ static void changeScale(bool direction)
     }
 }
 
+static void drawBtnHints()
+{
+    std::stringstream scalePromptCmb;
+    std::string emptyString = "";
+    std::string scalePromptMainTxt = ": -/+ scaling";
+    std::string scaleFactorStr = " (Current scale factor: ";
+    bool joyConnected = sf::Joystick::isConnected(0);
+    if (joyConnected)
+    {
+        scalePromptCmb.str(emptyString);
+        scalePromptCmb << btnPrompts[buttonL1] << "/" << btnPrompts[buttonR1] << scalePromptMainTxt << scaleFactorStr << (types::u16)scaleFactor << ")";
+        drawBitmapFont(btnPrompts[dpadUp] + "/" + btnPrompts[dpadDown] + ": Change selection",{0,28});
+        drawBitmapFont(btnPrompts[buttonCircle] + ": Exit",{0,27});
+        drawBitmapFont(btnPrompts[buttonCross] + ": Decision",{0,26});
+    }
+    else
+    {
+        scalePromptCmb.str(emptyString);
+        scalePromptCmb << "Left/Right" << scalePromptMainTxt << scaleFactorStr << (types::u16)scaleFactor << ")";
+        drawBitmapFont("Up/Down: Change selection",{0,28});
+        drawBitmapFont("Escape: Exit",{0,27});
+        drawBitmapFont("Enter: Decision",{0,26});
+    }
+    drawBitmapFont(scalePromptCmb.str(),{0,29});
+}
+
 void prefsScreen()
 {
     music.openFromFile(lsTrack);
     music.play();
     menuIndex = 0;
     fadeRect.setFillColor(sf::Color::Black);
-    std::stringstream scalePromptCmb;
-    std::string emptyString = "";
-    std::string scalePromptMainTxt = ": +/- scaling";
-    std::string scaleFactorStr = " (Current scale factor: ";
     types::u32 color = RGB4toRGB8(0x224);
     while (window.isOpen())
     {
-        if (sf::Joystick::isConnected(0))
-        {
-            scalePromptCmb.str(emptyString);
-            scalePromptCmb << btnPrompts[buttonL1] << "/" << btnPrompts[buttonR1] << scalePromptMainTxt << scaleFactorStr << (types::u16)scaleFactor << ")";
-        }
-        else
-        {
-            scalePromptCmb.str(emptyString);
-            scalePromptCmb << "L/R" << scalePromptMainTxt << scaleFactorStr << (types::u16)scaleFactor << ")";
-        }
         window.clear(sf::Color(color));
         drawBitmapFont("Difficulty:",{prefsX,prefsY});
         drawBitmapFont("Player:",{prefsX,prefsY+6.25});
-        drawBitmapFont(scalePromptCmb.str(),{0,29});
-        drawBitmapFont(btnPrompts[dpadUp] + "/" + btnPrompts[dpadDown] + ": Change selection",{0,28});
-        drawBitmapFont(btnPrompts[buttonCircle] + ": Exit",{0,27});
-        drawBitmapFont(btnPrompts[buttonCross] + ": Decision",{0,26});
+        drawBtnHints();
         updConfOutline();
         drawMenu(prefsMenu, prefsMenuAmnt);
         screenFade(volFadeSpeed,true,fadeDark);

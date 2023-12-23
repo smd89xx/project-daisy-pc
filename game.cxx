@@ -489,6 +489,23 @@ static void initHUD()
     healthTexture->loadFromFile(barImg);
 }
 
+static void drawBtnHints()
+{
+    bool joyConnected = sf::Joystick::isConnected(0);
+    if (joyConnected)
+    {
+        drawBitmapFont(btnPrompts[dpadUp] + "/" + btnPrompts[dpadDown] + ": Change selection",{0,29});
+        drawBitmapFont(btnPrompts[buttonOptions] + ": Unpause",{0,28});
+        drawBitmapFont(btnPrompts[buttonCross] + ": Decision",{0,27});
+    }
+    else
+    {
+        drawBitmapFont("Up/Down: Change selection",{0,29});
+        drawBitmapFont("Escape: Unpause",{0,28});
+        drawBitmapFont("Enter: Decision",{0,27});
+    }
+}
+
 void gameInit()
 {
     fadeRect.setFillColor(sf::Color::Black);
@@ -524,9 +541,7 @@ void gameInit()
             fadeMusic(true,volFadeSpeed,50);
             screenFade(volFadeSpeed*3,false,0x7F);
             drawMenu(pauseMenu,pauseOptsAmnt);
-            drawBitmapFont(btnPrompts[dpadUp] + "/" + btnPrompts[dpadDown] + ": Change selection",{0,29});
-            drawBitmapFont(btnPrompts[buttonOptions] + ": Unpause",{0,28});
-            drawBitmapFont(btnPrompts[buttonCross] + ": Decision",{0,27});
+            drawBtnHints();
         }
         window.display();
         while (window.pollEvent(e))

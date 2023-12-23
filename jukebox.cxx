@@ -118,6 +118,26 @@ static void toggleMusicPause()
     }
 }
 
+static void drawBtnHints()
+{
+    bool joyConnected = sf::Joystick::isConnected(0);
+    float btnY = musY + 26;
+    if (joyConnected)
+    {
+        drawBitmapFont(btnPrompts[buttonSquare] + ": Pause music",{0,btnY});
+        drawBitmapFont(btnPrompts[buttonCross] + ": (Re)start music/SFX",{0,btnY+1});
+        drawBitmapFont(btnPrompts[buttonCircle] + ": Exit",{0,btnY+2});
+        drawBitmapFont(btnPrompts[dpadLeft] + "/" + btnPrompts[dpadRight] + ": Change selection",{0,btnY+3});
+    }
+    else
+    {
+        drawBitmapFont("Space: Pause music",{0,btnY});
+        drawBitmapFont("Enter: (Re)start music/SFX",{0,btnY+1});
+        drawBitmapFont("Escape: Exit",{0,btnY+2});
+        drawBitmapFont("Left/Right: Change selection",{0,btnY+3});
+    }
+}
+
 void jukebox()
 {
     sb = new sf::SoundBuffer;
@@ -126,7 +146,6 @@ void jukebox()
     fadeRect.setFillColor(sf::Color::Black);
     std::stringstream songDurationStr;
     std::stringstream songElapsedStr;
-    const types::u8 btnY = musY + 26;
     types::u32 color = RGB4toRGB8(0x0224);
     while(window.isOpen())
     {
@@ -142,10 +161,7 @@ void jukebox()
         drawBitmapFont("Audio Type: " + musType[musHdr[menuIndex].isSFX],{musX,musY+5});
         drawBitmapFont("Elapsed Time: " + songElapsedStr.str() + timeMetric,{musX,musY+7});
         drawBitmapFont("Total Time: " + songDurationStr.str() + timeMetric,{musX,musY+8});
-        drawBitmapFont(btnPrompts[buttonSquare] + ": Pause music",{0,static_cast<float>(btnY)});
-        drawBitmapFont(btnPrompts[buttonCross] + ": (Re)start music/SFX",{0,static_cast<float>(btnY+1)});
-        drawBitmapFont(btnPrompts[buttonCircle] + ": Exit",{0,static_cast<float>(btnY+2)});
-        drawBitmapFont(btnPrompts[dpadLeft] + "/" + btnPrompts[dpadRight] + ": Change selection",{0,static_cast<float>(btnY+3)});
+        drawBtnHints();
         screenFade(volFadeSpeed,true,fadeDark);
         window.display();
         while(window.pollEvent(e))

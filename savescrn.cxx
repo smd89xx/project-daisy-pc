@@ -119,6 +119,27 @@ static void selectSave(types::u8 destination)
     }
 }
 
+static void displayHints()
+{
+    bool joyConnected = sf::Joystick::isConnected(0);
+    if (joyConnected)
+    {
+        drawBitmapFont(btnPrompts[buttonCross] + ": Decision",{0,25});
+        drawBitmapFont(btnPrompts[buttonCircle] + ": Exit",{0,26});
+        drawBitmapFont(btnPrompts[buttonR1] + " + " + btnPrompts[buttonCross] + ": No Save Mode",{0,27});
+        drawBitmapFont(btnPrompts[buttonTriangle] + ": Preferences [Current Save]",{0,28});
+        drawBitmapFont(btnPrompts[buttonR1] + " + " + btnPrompts[buttonTriangle] + ": Preferences [No Save]", {0,29});
+    }
+    else
+    {
+        drawBitmapFont("Enter: Decision",{0,25});
+        drawBitmapFont("Escape: Exit",{0,26});
+        drawBitmapFont("*Shift: No Save Mode",{0,27});
+        drawBitmapFont("*CTRL: Preferences [Current Save]",{0,28});
+        drawBitmapFont("*ALT: Preferences [No Save]", {0,29});
+    }
+}
+
 void saveScreen()
 {
     for (types::u8 i = 0; i < maxSlots; i++)
@@ -176,11 +197,7 @@ void saveScreen()
         drawBitmapFont("Level: " + lvlStrs[saveSlots[slotIndex].level],{saveX+2,saveY+2});
         drawBitmapFont(livesStr.str(),{21.5,1});
         drawBitmapFont(scoreStr.str(),{12,0});
-        drawBitmapFont(btnPrompts[buttonCross] + ": Decision",{0,25});
-        drawBitmapFont(btnPrompts[buttonCircle] + ": Exit",{0,26});
-        drawBitmapFont(btnPrompts[buttonSquare] + ": No Save Mode",{0,27});
-        drawBitmapFont(btnPrompts[buttonTriangle] + ": Preferences [Current Save]",{0,28});
-        drawBitmapFont(btnPrompts[buttonR1] + " + " + btnPrompts[buttonTriangle] + ": Preferences [No Save]", {0,29});
+        displayHints();
         drawBitmapFont("No Save:",{saveX,saveY+4});
         drawBitmapFont("Difficulty: " + diffStrs[saveSlots[maxSlots].difficulty],{saveX+2,saveY+5});
         drawBitmapFont("Level: " + lvlStrs[saveSlots[maxSlots].level],{saveX+2,saveY+6});
@@ -249,6 +266,10 @@ void saveScreen()
                     {
                         case buttonCross:
                         {
+                            if (sf::Joystick::isButtonPressed(0,buttonR1))
+                            {
+                                slotIndex = 8;
+                            }
                             sndCnf.play();
                             selectSave(destGame);
                             break;
@@ -259,26 +280,14 @@ void saveScreen()
                             selectSave(destTitle);
                             break;
                         }
-                        case buttonSquare:
-                        {
-                            slotIndex = 8;
-                            sndCnf.play();
-                            selectSave(destGame);
-                            break;
-                        }
                         case buttonTriangle:
                         {
                             if (sf::Joystick::isButtonPressed(0,buttonR1))
                             {
                                 slotIndex = 8;
-                                sndCnf.play();
-                                selectSave(destPrefs);
                             }
-                            else
-                            {
-                                sndCnf.play();
-                                selectSave(destPrefs);
-                            }
+                            sndCnf.play();
+                            selectSave(destPrefs);
                             break;
                         }
                         default:
