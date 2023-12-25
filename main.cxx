@@ -88,6 +88,7 @@ static void chkJoypadVendor()
         }
         case xb1CCVID:
         {
+            btnPrompts = (std::string*)xb1Prompts;
             break;
         }
         default:

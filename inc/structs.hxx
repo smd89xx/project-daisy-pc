@@ -64,4 +64,15 @@ namespace structs
                 addrHealth = 8,
             };
     };
+    class PlayerMData
+    {
+        public:
+            sf::Texture texture;
+            sf::Sprite sprite;
+            sf::Vector2f position;
+            sf::Vector2f velocity;
+            float maxSpeed;
+            float jumpStrength;
+            Directions directions;
+    };
 }

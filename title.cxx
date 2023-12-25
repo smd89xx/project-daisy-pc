@@ -102,6 +102,7 @@ void title()
     sf::RectangleShape titleRect;
     titleRect.setTexture(&titleBGTexture);
     titleRect.setSize(sf::Vector2f(window.getSize()));
+    types::u8 startButton = startBtnID();
     while (window.isOpen())
     {
         window.clear(sf::Color(color));
@@ -149,26 +150,16 @@ void title()
                 {
                     break;
                 }
-                switch (e.joystickButton.button)
+                if (e.joystickButton.button == buttonCircle)
                 {
-                    case buttonOptions:
-                    {
-                        sndCnf.play();
-                        selectMenuTitle(false);
-                        break;
-                    }
-                    case buttonCircle:
-                    {
-                        sndBack.play();
-                        selectMenuTitle(true);
-                        break;
-                    }
-                    default:
-                    {
-                        break;
-                    }
+                    sndBack.play();
+                    selectMenuTitle(true);
                 }
-                break;
+                else if (e.joystickButton.button == startButton)
+                {
+                    sndCnf.play();
+                    selectMenuTitle(false);
+                }
             }
             default:
             {

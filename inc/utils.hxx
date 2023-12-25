@@ -29,6 +29,7 @@ extern sf::Texture bitmapFont;
 extern sf::Texture cursorTexture;
 extern std::string* btnPrompts;
 extern const std::string ds4Prompts[];
+extern const std::string xb1Prompts[];
 extern structs::SaveMData saveSlots[9];
 extern types::u16 slotIndex;
 extern const types::u16 maxSlots;
@@ -44,7 +45,7 @@ enum errorCodes
     invalidSRAMVersion,
 };
 
-enum ds4Buttons
+enum joyButtons
 {
     buttonCross,
     buttonCircle,
@@ -59,9 +60,14 @@ enum ds4Buttons
     buttonPS,
     buttonL3,
     buttonR3,
+    buttonView = 6,
+    buttonMenu,
+    buttonXB,
+    buttonLS,
+    buttonRS,
 };
 
-enum ds4Axes
+enum joyAxes
 {
     axisL3X,
     axisL3Y,
@@ -110,3 +116,4 @@ types::u16 readSRAM_u16(types::u16 startAddr);
 void writeSRAM_u16(types::u16 startAddr, types::u16 value);
 void drawBitmapFont(std::string text, sf::Vector2f position);
 types::u32 RGB4toRGB8(types::u16 rgb4);
+types::u8 startBtnID();

@@ -38,6 +38,7 @@ sf::Texture bitmapFont;
 sf::Texture cursorTexture;
 std::string* btnPrompts;
 const std::string ds4Prompts[] = {"Cross","Circle","Triangle","Square","L1","R1","L2","R2","Share","Options","PS Button","L3","R3","DPAD Left","DPAD Right","DPAD Up","DPAD Down"};
+const std::string xb1Prompts[] = {"A","B","X","Y","LB","RB","View","Menu","Xbox Button","LS","RS","Unused 11","Unused 12","DPAD Left","DPAD Right","DPAD Up","DPAD Down"};
 structs::SaveMData saveSlots[9];
 const types::u16 maxSlots = 8;
 types::u16 slotIndex = 0;
@@ -78,11 +79,10 @@ void drawMenu(const structs::Option* option, types::u8 length)
     {
         structs::Option o(option[i]);
         drawBitmapFont(o.label,{o.x,o.y});
-        sf::RectangleShape cursor(sf::Vector2f(8,8));
-        cursor.setTexture(&cursorTexture);
+        sf::Sprite cursor(cursorTexture);
         cursor.setScale(scaleFactor,scaleFactor);
         cursor.setPosition(pixelToTile(option[menuIndex].x - 1),pixelToTile(option[menuIndex].y));
-        cursor.setFillColor(playerColors[saveSlots[slotIndex].player]);
+        cursor.setColor(playerColors[saveSlots[slotIndex].player]);
         window.draw(cursor);
     }
 }
@@ -431,10 +431,9 @@ void drawBitmapFont(std::string text, sf::Vector2f position)
     position.y *= scaleFactor;
     for (types::u16 i = 0; i < text.length(); i++)
     {
-        sf::RectangleShape character(sf::Vector2f(8,8));
+        sf::Sprite character(bitmapFont);
         character.setScale(scaleFactor,scaleFactor);
         character.setPosition(pixelToTile((position.x/scaleFactor)+i),pixelToTile(position.y/scaleFactor));
-        character.setTexture(&bitmapFont);
         character.setTextureRect({8*(text.c_str()[i] - 0x20),0,8,8});
         window.draw(character);
     }
@@ -459,4 +458,21 @@ types::u32 RGB4toRGB8(types::u16 rgb4)
     channels[1] = b + (b >> 4);
     channels[0] = 0xFF;
     return rgb8;
+}
+
+/// @brief Determines which button on your controller pertains to [an equivalent of] the start button.
+/// @return Button ID of the start button.
+types::u8 startBtnID()
+{
+    types::u8 startButton;
+    types::u32 vid = sf::Joystick::getIdentification(0).vendorId;
+    if (vid == xb1CCVID)
+    {
+        startButton = buttonMenu;
+    }
+    else if (vid == ds4VID)
+    {
+        startButton = buttonOptions;
+    }
+    return startButton;
 }

@@ -15,14 +15,7 @@ const structs::Option pauseMenu[] =
     {pauseX,pauseY+1.25,"Save and Exit"},
     {pauseX,pauseY+2.5,"Exit Without Saving"}
 };
-sf::Texture* playerTexture;
-sf::Sprite* playerSprite;
-sf::Vector2f* playerPositions;
-sf::Vector2f* playerVelocities;
-float* maxSpeed;
 const types::u8 collisionRectAmounts[] = {5};
-std::thread* collisionThread;
-structs::Directions* playerDirection;
 bool* runThread;
 bool* isJumping;
 enum cameraBoundaries {leftCamBnd = 144, rightCamBnd = 144, topCamBnd = 104, bottomCamBnd = 104};
@@ -31,21 +24,23 @@ const sf::Vector2i playerHitboxes[] = {{0,0},{15,30}};
 const sf::Vector2i playerSizes[] = {{32,32},{32,32}};
 sf::SoundBuffer* sbGame;
 sf::Sound* sndGame;
-float* jumpStrength;
 const structs::AnimMData playerAnimData[2][3] = 
 {
     {
-        {0,1,0},{1,2,15},{2,1,0},
+        {0,1,1},{1,2,15},{2,1,1},
     },
     {
-        {0,1,0},{1,2,15},{2,1,0},
+        {0,1,1},{1,2,15},{2,1,1},
     }
 };
 sf::Texture* hudTexture;
 sf::Texture* healthTexture;
 const std::string playerNames[] = {"Lucy","Stephanie"};
-b2Vec2* gravity;
-b2World* world;
+structs::PlayerMData* playerObj;
+std::thread* collisionThread;
+types::u8* frameTimer;
+types::u8* frameIndex;
+types::u16* animIndex;
 enum playerAnimIDs
 {
     playerIdle,
@@ -58,25 +53,25 @@ static void camPos()
     sf::Vector2f rectSize(lvlPxBG->getSize());
     rectSize.x *= scaleFactor;
     rectSize.y *= scaleFactor;
-    sf::Vector2f playerScreenPos(playerPositions->x - cameraPositions->x, playerPositions->y - cameraPositions->y);
+    sf::Vector2f playerScreenPos(playerObj->position.x - cameraPositions->x, playerObj->position.y - cameraPositions->y);
     sf::Vector2i bgCamPos(*cameraPositions);
     bgCamPos.x /= 2;
     bgCamPos.y /= 2;
     if (playerScreenPos.x > rightCamBnd * scaleFactor)
     {
-        cameraPositions->x = (playerPositions->x - rightCamBnd);
+        cameraPositions->x = (playerObj->position.x - rightCamBnd);
     }
     else if (playerScreenPos.x < leftCamBnd * scaleFactor)
     {
-        cameraPositions->x = (playerPositions->x - leftCamBnd);
+        cameraPositions->x = (playerObj->position.x - leftCamBnd);
     }
     if (playerScreenPos.y > bottomCamBnd * scaleFactor)
     {
-        cameraPositions->y = (playerPositions->y - bottomCamBnd);
+        cameraPositions->y = (playerObj->position.y - bottomCamBnd);
     }
     else if (playerScreenPos.y < topCamBnd * scaleFactor)
     {
-        cameraPositions->y = (playerPositions->y - topCamBnd);
+        cameraPositions->y = (playerObj->position.y - topCamBnd);
     }
     if (cameraPositions->x < 0)
     {
@@ -114,12 +109,12 @@ static const sf::IntRect* loadMap()
         lvlPxFG->loadFromFile(testLvlFG);
         lvlBG->setTexture(lvlPxBG);
         lvlFG->setTexture(lvlPxFG);
-        playerPositions->x = 48;
-        playerPositions->y = 160;
+        playerObj->position.x = 48;
+        playerObj->position.y = 160;
         music.openFromFile(lfTrack);
         music.setLoop(true);
         music.play();
-        return testLvlCollision;
+        return nullptr;
         break;
     }
     default:
@@ -131,128 +126,87 @@ static const sf::IntRect* loadMap()
     }
 }
 
-static void manageAnim(types::u16 animIndex)
+static void manageAnim()
 {
-    for (types::u8 i = 0; i < playerAnimData[saveSlots[slotIndex].player][animIndex].frameAmount; i++)
+    if (*frameTimer < playerAnimData[saveSlots[slotIndex].player][*animIndex].frameTime)
     {
-        for (types::u8 t = 0; t < playerAnimData[saveSlots[slotIndex].player][animIndex].frameTime; t++)
-        {
-            playerSprite->setTextureRect({(i * playerSizes[saveSlots[slotIndex].player].x),(animIndex * playerSizes[saveSlots[slotIndex].player].y),playerSizes[saveSlots[slotIndex].player].x,playerSizes[saveSlots[slotIndex].player].y});
-        }
+        (*frameTimer)++;
     }
+    else
+    {
+        *frameTimer = 0;
+        if (*frameIndex < playerAnimData[saveSlots[slotIndex].player][*animIndex].frameAmount - 1)
+        {
+            (*frameIndex)++;
+        }
+        else
+        {
+            *frameIndex = 0;
+        }
+        
+    }
+    playerObj->sprite.setTextureRect({((*frameIndex)*playerSizes[saveSlots[slotIndex].player].x),((*animIndex) * playerSizes[saveSlots[slotIndex].player].y),playerSizes[saveSlots[slotIndex].player].x,playerSizes[saveSlots[slotIndex].player].y});
 }
 
 static void updatePlayer()
 {
-    playerPositions->x += playerVelocities->x;
-    playerPositions->y += playerVelocities->y;
+    playerObj->position.x += playerObj->velocity.x;
+    playerObj->position.y += playerObj->velocity.y;
     sf::Vector2f rectSize(lvlPxBG->getSize());
     rectSize.x *= scaleFactor;
     rectSize.y *= scaleFactor;
-    if (playerPositions->x < playerSprite->getOrigin().x)
+    if (playerObj->position.x < playerObj->sprite.getOrigin().x)
     {
-        playerPositions->x = playerSprite->getOrigin().x;
+        playerObj->position.x = playerObj->sprite.getOrigin().x;
     }
-    else if (playerPositions->x > (rectSize.x - playerTexture->getSize().x) / scaleFactor)
+    else if (playerObj->position.x > (rectSize.x - playerObj->texture.getSize().x) / scaleFactor)
     {
-        playerPositions->x = (rectSize.x - playerTexture->getSize().x) / scaleFactor;
+        playerObj->position.x = (rectSize.x - playerObj->texture.getSize().x) / scaleFactor;
     }
-    if (playerPositions->y > (rectSize.y) / scaleFactor)
+    if (playerObj->position.y > (rectSize.y) / scaleFactor)
     {
-        playerPositions->y = (rectSize.y) / scaleFactor;
+        playerObj->position.y = (rectSize.y) / scaleFactor;
     }
-    playerSprite->setPosition(sf::Vector2f((playerPositions->x - cameraPositions->x) * scaleFactor,(playerPositions->y - cameraPositions->y) * scaleFactor));
+    playerObj->sprite.setPosition(sf::Vector2f((playerObj->position.x - cameraPositions->x) * scaleFactor,(playerObj->position.y - cameraPositions->y) * scaleFactor));
 }
 
-static void gameInputHdl_KB()
+static void gameInputHdl()
 {
-    bool leftPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Left);
-    bool rightPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Right);
-    bool upPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Up);
-    bool downPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Down);
-    if (leftPressed)
-    {
-        playerVelocities->x = -1.5;
-        playerSprite->setScale(-scaleFactor,scaleFactor);
-        playerDirection->left = true;
-        playerDirection->right = false;
-    }
-    else if (rightPressed)
-    {
-        playerVelocities->x = 1.5;
-        playerSprite->setScale(scaleFactor,scaleFactor);
-        playerDirection->left = false;
-        playerDirection->right = true;
-    }
-    else
-    {
-        playerVelocities->x = 0;
-        playerDirection->left = false;
-        playerDirection->right = false;
-    }
-    if (upPressed)
-    {
-        playerDirection->up = true;
-        playerDirection->down = false;
-    }
-    else if (downPressed)
-    {
-        playerDirection->up = false;
-        playerDirection->down = true;
-    }
-    else
-    {
-        playerDirection->up = false;
-        playerDirection->down = false;
-    }
-}
-
-static void gameInputHdl_Joy()
-{
-    if (!window.hasFocus() || !sf::Joystick::isConnected(0))
+    if (!window.hasFocus())
     {
         return;
     }
     types::s8 XPos = sf::Joystick::getAxisPosition(0,(sf::Joystick::Axis)axisDPADX);
     types::s8 YPos = sf::Joystick::getAxisPosition(0,(sf::Joystick::Axis)axisDPADY);
-    bool leftPressed = (XPos == -100);
-    bool rightPressed = (XPos == 100);
-    bool upPressed = (YPos == -100);
-    bool downPressed = (YPos == 100);
+    bool leftPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Left) || (XPos == -100);
+    bool rightPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Right) || (XPos == 100);
+    bool upPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Up) || (YPos == -100);
+    bool downPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Down) || (YPos == 100);
     if (leftPressed)
     {
-        playerVelocities->x = -1.5;
-        playerSprite->setScale(-scaleFactor,scaleFactor);
-        playerDirection->left = true;
-        playerDirection->right = false;
+        if (!*isJumping)
+        {
+            *animIndex = playerWalking;
+        }
+        playerObj->velocity.x = -1.5;
+        playerObj->sprite.setScale(-scaleFactor,scaleFactor);
     }
     else if (rightPressed)
     {
-        playerVelocities->x = 1.5;
-        playerSprite->setScale(scaleFactor,scaleFactor);
-        playerDirection->left = false;
-        playerDirection->right = true;
+        if (!*isJumping)
+        {
+            *animIndex = playerWalking;
+        }
+        playerObj->velocity.x = 1.5;
+        playerObj->sprite.setScale(scaleFactor,scaleFactor);
     }
     else
     {
-        playerVelocities->x = 0;
-        playerDirection->left = false;
-        playerDirection->right = false;
-    }
-    if (upPressed)
-    {
-        playerDirection->up = true;
-        playerDirection->down = false;
-    }
-    else if (downPressed)
-    {
-        playerDirection->up = false;
-        playerDirection->down = true;
-    }
-    else
-    {
-        playerDirection->up = false;
-        playerDirection->down = false;
+        if (!*isJumping)
+        {
+            *animIndex = playerIdle;
+        }
+        playerObj->velocity.x = 0;
     }
 }
 
@@ -264,23 +218,18 @@ static void gameCleanup()
     delete lvlPxBG;
     delete lvlFG;
     delete lvlPxFG;
-    delete playerSprite;
-    delete playerTexture;
-    delete playerPositions;
-    delete playerVelocities;
-    delete maxSpeed;
     *runThread = false;
     collisionThread->join();
     delete runThread;
-    delete collisionThread;
-    delete playerDirection;
     delete isJumping;
     delete sbGame;
     delete sndGame;
     delete healthTexture;
     delete hudTexture;
-    delete gravity;
-    delete world;
+    delete playerObj;
+    delete frameTimer;
+    delete frameIndex;
+    delete animIndex;
 }
 
 static void gameBack()
@@ -363,18 +312,14 @@ static void spawnPlayer()
     {
         playerTexturePath = &placeholderSpr;
     }
-    playerTexture = new sf::Texture;
-    playerTexture->loadFromFile(*playerTexturePath);
-    playerSprite = new sf::Sprite(*playerTexture);
-    playerSprite->setTextureRect({0,0,32,32});
-    playerSprite->setScale(sf::Vector2f(scaleFactor,scaleFactor));
-    playerSprite->setOrigin(sf::Vector2f(playerSprite->getTextureRect().width/2,playerSprite->getTextureRect().height/2));
-    playerPositions = new sf::Vector2f(*cameraPositions);
-    playerVelocities = new sf::Vector2f(*cameraPositions);
-    maxSpeed = new float(1.5);
-    playerDirection = new structs::Directions;
+    playerObj = new structs::PlayerMData;
+    playerObj->texture.loadFromFile(*playerTexturePath);
+    playerObj->sprite.setTexture(playerObj->texture);
+    playerObj->sprite.setTextureRect({0,0,32,32});
+    playerObj->sprite.setScale(sf::Vector2f(scaleFactor,scaleFactor));
+    playerObj->sprite.setOrigin(sf::Vector2f(playerObj->sprite.getTextureRect().width/2,playerObj->sprite.getTextureRect().height/2));
     isJumping = new bool(false);
-    jumpStrength = new float(16);
+    playerObj->jumpStrength = 9.8;
 }
 
 static void chkCollision(const sf::IntRect* collisionArray)
@@ -427,12 +372,12 @@ static void jump()
     {
         return;
     }
-    manageAnim(playerJumping);
+    *animIndex = playerJumping;
     sbGame->loadFromFile(jumpSFX);
     sndGame->setBuffer(*sbGame);
     sndGame->play();
-    playerPositions->y -= 5;
-    playerVelocities->y -= *jumpStrength;
+    playerObj->position.y -= 5;
+    playerObj->velocity.y -= playerObj->jumpStrength;
     *isJumping = true;
 }
 
@@ -463,10 +408,10 @@ static void drawHUD()
     livesStr << "|" << std::setfill('0') << std::setw(3) << (types::u16)saveSlots[slotIndex].lives;
     drawBitmapFont(livesStr.str(),{21.5,1});
     std::stringstream pxStr;
-    pxStr << "PX: " << std::showpoint << std::fixed << std::setprecision(3) << playerPositions->x;
+    pxStr << "PX: " << std::showpoint << std::fixed << std::setprecision(3) << playerObj->position.x;
     drawBitmapFont(pxStr.str(),{0,2});
     std::stringstream pyStr;
-    pyStr << "PY: " << std::showpoint << std::fixed << std::setprecision(3) << playerPositions->y;
+    pyStr << "PY: " << std::showpoint << std::fixed << std::setprecision(3) << playerObj->position.y;
     drawBitmapFont(pyStr.str(),{0,3});
     std::stringstream cxStr;
     cxStr << "PX: " << std::showpoint << std::fixed << std::setprecision(3) << cameraPositions->x;
@@ -492,10 +437,11 @@ static void initHUD()
 static void drawBtnHints()
 {
     bool joyConnected = sf::Joystick::isConnected(0);
+    types::u8 startButton = startBtnID();
     if (joyConnected)
     {
         drawBitmapFont(btnPrompts[dpadUp] + "/" + btnPrompts[dpadDown] + ": Change selection",{0,29});
-        drawBitmapFont(btnPrompts[buttonOptions] + ": Unpause",{0,28});
+        drawBitmapFont(btnPrompts[startButton] + ": Unpause",{0,28});
         drawBitmapFont(btnPrompts[buttonCross] + ": Decision",{0,27});
     }
     else
@@ -514,23 +460,25 @@ void gameInit()
     runThread = new bool(true);
     sbGame = new sf::SoundBuffer;
     sndGame = new sf::Sound;
-    gravity = new b2Vec2(0,-10);
-    world = new b2World(*gravity);
+    frameTimer = new types::u8(0);
+    frameIndex = new types::u8(0);
+    animIndex = new types::u16(0);
     spawnPlayer();
     const sf::IntRect* collisionArray = loadMap();
     initHUD();
     collisionThread = new std::thread(chkCollision,collisionArray);
+    types::u8 startButton = startBtnID();
     while (window.isOpen())
     {
+        manageAnim();
         window.clear(sf::Color::Black);
         window.draw(*lvlBG);
         window.draw(*lvlFG);
-        window.draw(*playerSprite);
+        window.draw(playerObj->sprite);
         drawHUD();
         if (!*isPaused)
         {
-            gameInputHdl_KB();
-            gameInputHdl_Joy();
+            gameInputHdl();
             camPos();
             updatePlayer();
             fadeMusic(false,volFadeSpeed,volMax);
@@ -595,7 +543,7 @@ void gameInit()
                 }
                 if (!*isPaused)
                 {
-                    if (e.joystickButton.button == buttonOptions)
+                    if (e.joystickButton.button == startButton)
                     {
                         sndCnf.play();
                         *isPaused = true;

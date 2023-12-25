@@ -124,19 +124,21 @@ static void displayHints()
     bool joyConnected = sf::Joystick::isConnected(0);
     if (joyConnected)
     {
-        drawBitmapFont(btnPrompts[buttonCross] + ": Decision",{0,25});
-        drawBitmapFont(btnPrompts[buttonCircle] + ": Exit",{0,26});
-        drawBitmapFont(btnPrompts[buttonR1] + " + " + btnPrompts[buttonCross] + ": No Save Mode",{0,27});
-        drawBitmapFont(btnPrompts[buttonTriangle] + ": Preferences [Current Save]",{0,28});
-        drawBitmapFont(btnPrompts[buttonR1] + " + " + btnPrompts[buttonTriangle] + ": Preferences [No Save]", {0,29});
+        drawBitmapFont(btnPrompts[buttonCross] + ": Decision",{0,24});
+        drawBitmapFont(btnPrompts[buttonCircle] + ": Exit",{0,25});
+        drawBitmapFont(btnPrompts[buttonR1] + " + " + btnPrompts[buttonCross] + ": No Save Mode",{0,26});
+        drawBitmapFont(btnPrompts[buttonTriangle] + ": Preferences [Current Save]",{0,27});
+        drawBitmapFont(btnPrompts[buttonR1] + " + " + btnPrompts[buttonTriangle] + ": Preferences [No Save]", {0,28});
+        drawBitmapFont(btnPrompts[dpadLeft] + "/" + btnPrompts[dpadRight] + ": Change selection",{0,29});
     }
     else
     {
-        drawBitmapFont("Enter: Decision",{0,25});
-        drawBitmapFont("Escape: Exit",{0,26});
-        drawBitmapFont("*Shift: No Save Mode",{0,27});
-        drawBitmapFont("*CTRL: Preferences [Current Save]",{0,28});
-        drawBitmapFont("*ALT: Preferences [No Save]", {0,29});
+        drawBitmapFont("Enter: Decision",{0,24});
+        drawBitmapFont("Escape: Exit",{0,25});
+        drawBitmapFont("*Shift: No Save Mode",{0,26});
+        drawBitmapFont("*CTRL: Preferences [Current Save]",{0,27});
+        drawBitmapFont("*ALT: Preferences [No Save]", {0,28});
+        drawBitmapFont("Left/Right: Change selection",{0,29});
     }
 }
 

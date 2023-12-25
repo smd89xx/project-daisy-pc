@@ -6,7 +6,6 @@
 #include <thread>
 #include <sstream>
 #include "CRCpp/inc/CRC.h"
-#include <box2d/box2d.h>
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>

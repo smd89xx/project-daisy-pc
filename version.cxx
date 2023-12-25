@@ -6,6 +6,6 @@ const std::string programTitle = "Project Daisy";
 const std::string buildTitle = "Build 20231222-PC";
 const types::u8 versionMajor = 1;
 const types::u8 versionMinor = 0;
-const types::u8 versionRevision = 4;
+const types::u8 versionRevision = 5;
 const types::u8 releaseStage = 1;
 const types::u8 saveVersion = 2;
