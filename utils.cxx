@@ -24,24 +24,23 @@ const types::u8 maxScale = 5;
 const sf::Vector2u screenSizes[] = {{426,240},{854,480},{1280,720},{1708,960},{2134,1200}};
 sf::Event e;
 const types::u8 bsodTextLines = 2;
-const std::string bsodText[] = {"Your game ran into a problem and needs to restart.","Press any key or joypad button to restart."};
 const types::u8 bsodX = 6;
 const types::u8 bsodY = 5;
 const types::u8 bsodSubTxtLines[] = {2,4};
-const std::string bsodSubTxt[] = {"For more information about this issue and possible fixes, visit","https://github.com/TheWindowsPro98/project-daisy-pc/blob/main/docs/errors.md","If you contact the developer (don't), give him this info:","Stop Code (String):","Stop Code (Hex):","What Failed:"};
-const std::string bsodStopStrings[] = {"Generic error.","Requested feature was not found.","Level ID is outside valid range.","Game assets are missing.","Game scaling is not within the valid range.","Player ID is outside valid range.","Save file checksum and expected checksum do not match.","Save file version and expected version do not match."};
 const char lineEnd = '\n';
 const char space = ' ';
 std::fstream saveFile;
 char saveRAM[32768];
 sf::Texture bitmapFont;
 sf::Texture cursorTexture;
-std::string* btnPrompts;
-const std::string ds4Prompts[] = {"Cross","Circle","Triangle","Square","L1","R1","L2","R2","Share","Options","PS Button","L3","R3","DPAD Left","DPAD Right","DPAD Up","DPAD Down"};
-const std::string xb1Prompts[] = {"A","B","X","Y","LB","RB","View","Menu","Xbox Button","LS","RS","Unused 11","Unused 12","DPAD Left","DPAD Right","DPAD Up","DPAD Down"};
+std::string btnPrompts[17];
 structs::SaveMData saveSlots[9];
 const types::u16 maxSlots = 8;
 types::u16 slotIndex = 0;
+const std::string resTxtLocation = "res/txt/res.txt";
+const std::string stringLocation = "res/txt/strings.txt";
+std::ifstream resList(resTxtLocation);
+std::ifstream stringList(stringLocation);
 
 /// @brief Fades the screen in or out.
 /// @param speed Speed of the fade. Bigger value = faster fade.
@@ -185,26 +184,27 @@ static void resetGame(int error)
 static void fallback_printerr(int error, std::string file)
 {
     using namespace std;
-    cout << ":(" << lineEnd << lineEnd;
+    cout << getFileLine(strBSODFrown) << lineEnd << lineEnd;
     for (types::u8 i = 0; i < bsodTextLines; i++)
     {
-        cout << bsodText[i] << lineEnd;
+        cout << getFileLine(strBSODMainTxt+i,&stringList) << lineEnd;
     }
     cout << lineEnd;
     for (types::u8 i = 0; i < bsodSubTxtLines[0]; i++)
     {
-        cout << bsodSubTxt[i] << lineEnd;
+        cout << getFileLine(strBSODSubTxt+i,&stringList) << lineEnd;
     }
     cout << lineEnd;
-    cout << bsodSubTxt[2] << lineEnd;
-    cout << bsodSubTxt[3] << space << bsodStopStrings[error] << lineEnd;
-    cout << bsodSubTxt[4] << space << hex << "0x" << setfill('0') << setw(types::varSizes::var32Bit*2) << error << lineEnd;
-    cout << bsodSubTxt[5] << space << file << endl;
+    cout << getFileLine(strBSODInfoHdr,&stringList) << lineEnd;
+    cout << getFileLine(strBSODStop,&stringList) << space << getFileLine(strSTOPCodes+error,&stringList) << lineEnd;
+    cout << getFileLine(strBSODHexCode,&stringList) << space << hex << getFileLine(strHexPrefix) << setfill('0') << setw(types::varSizes::var32Bit*2) << error << lineEnd;
+    cout << getFileLine(strBSODFuncCall,&stringList) << space << file << endl;
     if (error == invalidChecksum)
     {
-        cout << lineEnd << "If you intentionally modified your save file, here is the corrected checksum (overwrite first 4 bytes):" << lineEnd;
+        string sumPrompt = getFileLine(strBSODCChk,&stringList); 
+        cout << lineEnd << sumPrompt << lineEnd;
         types::u32 checksum = generateSaveChkSum();
-        cout << "0x" << hex << setfill('0') << setw(types::varSizes::var32Bit*2) << uppercase << checksum << endl;
+        cout << getFileLine(strHexPrefix) << hex << setfill('0') << setw(types::varSizes::var32Bit*2) << uppercase << checksum << endl;
     }
     exit(1);
 }
@@ -218,7 +218,7 @@ void printerr(int error, std::string file, bool fallback)
     sf::Texture bsodQRPx;
     sf::Texture bsodFrownPx;
     sf::SoundBuffer sbSad;
-    bool assetsFailed = bsodFrownPx.loadFromFile(bsodFrown) & bsodQRPx.loadFromFile(bsodQR) & sbSad.loadFromFile(crashSFX);
+    bool assetsFailed = bsodFrownPx.loadFromFile(getFileLine(resBSODFrown,&resList)) & bsodQRPx.loadFromFile(getFileLine(resBSODQR,&resList)) & sbSad.loadFromFile(getFileLine(resCrashSFX,&resList));
     if (!assetsFailed || fallback)
     {
         fallback_printerr(error,file);
@@ -246,14 +246,14 @@ void printerr(int error, std::string file, bool fallback)
     for (types::u8 i = 0; i < bsodTextLines; i++)
     {
         bsodDrawableText[i] = templateText;
-        bsodDrawableText[i].setString(bsodText[i]);
+        bsodDrawableText[i].setString(getFileLine(strBSODMainTxt+i,&stringList));
         bsodDrawableText[i].setPosition(sf::Vector2f(pixelToTile(bsodX),pixelToTile(bsodY+8+i)));
         bsodDrawableText[i].setStyle(sf::Text::Style::Bold);
     }
     for (types::u8 i = 0; i < bsodSubTxtLines[0]; i++)
     {
         bsodDrawableSubTxt[i] = templateText;
-        bsodDrawableSubTxt[i].setString(bsodSubTxt[i]);
+        bsodDrawableSubTxt[i].setString(getFileLine(strBSODSubTxt+i,&stringList));
         bsodDrawableSubTxt[i].setPosition(sf::Vector2f(pixelToTile(bsodX+6.75),pixelToTile(bsodY+12+i)));
         bsodDrawableSubTxt[i].setStyle(sf::Text::Style::Bold);
         bsodDrawableSubTxt[i].setScale(0.65,0.65);
@@ -261,19 +261,19 @@ void printerr(int error, std::string file, bool fallback)
     for (types::u8 i = 0; i < bsodSubTxtLines[1]; i++)
     {
         bsodDrawableSubTxt[i+2] = templateText;
-        bsodDrawableSubTxt[i+2].setString(bsodSubTxt[i+2]);
+        bsodDrawableSubTxt[i+2].setString(getFileLine(strBSODInfoHdr+i,&stringList));
         bsodDrawableSubTxt[i+2].setPosition(sf::Vector2f(pixelToTile(bsodX+6.75),pixelToTile(bsodY+15+i)));
         bsodDrawableSubTxt[i+2].setStyle(sf::Text::Style::Bold);
         bsodDrawableSubTxt[i+2].setScale(0.55,0.55);
     }
     sf::Text bsodDrawableStopText(bsodDrawableSubTxt[3]);
-    bsodDrawableStopText.setString(bsodStopStrings[error]);
+    bsodDrawableStopText.setString(getFileLine(strSTOPCodes+error,&stringList));
     bsodDrawableStopText.setPosition(pixelToTile(bsodX+13.75),pixelToTile(bsodY+16));
     std::stringstream hexStr;
     hexStr << "0x" << std::setfill('0') << std::setw(types::varSizes::var32Bit*2) << std::hex << error;
     sf::Text bsodDrawableStopHex(bsodDrawableStopText);
     bsodDrawableStopHex.setString(hexStr.str());
-    bsodDrawableStopHex.setPosition(pixelToTile(bsodX+12.75),pixelToTile(bsodY+17));
+    bsodDrawableStopHex.setPosition(pixelToTile(bsodX+14.25),pixelToTile(bsodY+17));
     sf::Text bsodDrawablePtr(bsodDrawableStopHex);
     bsodDrawablePtr.setString(file);
     bsodDrawablePtr.setPosition(pixelToTile(bsodX+11.35),pixelToTile(bsodY+18));
@@ -369,7 +369,7 @@ types::u32 generateSaveChkSum()
 void updSRAM()
 {
     types::u32 checksum = generateSaveChkSum();
-    saveFile.open(saveFileLocation,std::ios::out);
+    saveFile.open(getFileLine(resSaveFile,&resList),std::ios::out);
     saveFile.write(saveRAM,sizeof(saveRAM));
     saveFile.close();
 }
@@ -464,9 +464,15 @@ types::u32 RGB4toRGB8(types::u16 rgb4)
 /// @return Button ID of the start button.
 types::u8 startBtnID()
 {
+
     types::u8 startButton;
     types::u32 vid = sf::Joystick::getIdentification(0).vendorId;
-    if (vid == xb1CCVID)
+    bool joyConnected = sf::Joystick::isConnected(0);
+    if (!joyConnected)
+    {
+        startButton = 0;
+    }
+    else if (vid == xb1CCVID)
     {
         startButton = buttonMenu;
     }
@@ -475,4 +481,19 @@ types::u8 startBtnID()
         startButton = buttonOptions;
     }
     return startButton;
+}
+
+/// @brief Gets a string from a specific line in a text file.
+/// @param lineNum Desired line number.
+/// @param file Source file.
+/// @return String containing text line.
+std::string getFileLine(types::u16 lineNum,std::ifstream* file)
+{
+    std::string line;
+    for (types::u16 i = 0; i < lineNum; i++)
+    {
+        getline(*file,line);
+    }
+    file->seekg(0);
+    return line;
 }

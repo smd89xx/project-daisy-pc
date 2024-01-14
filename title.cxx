@@ -1,17 +1,6 @@
 #include "inc/includes.hxx"
 
-const types::u8 titleX = 2;
-const types::u8 titleY = 20;
 const types::u8 titleOptAmnt = 4;
-const sf::IntRect titleCurRects[] = {{titleX,titleY,0,0}};
-
-const structs::Option titleMenu[] = 
-{
-    {titleX,titleY,"Save Select"},
-    {titleX,titleY+1.25,"Statistics"},
-    {titleX,titleY+2.5,"Preferences"},
-    {titleX,titleY+3.75,"Exit Game"},
-};
 
 static void selectMenuTitle(bool exit)
 {
@@ -81,16 +70,12 @@ static void moveCursor(bool direction)
 void title()
 {
     fadeRect.setFillColor(sf::Color::Black);
-    std::string vmajStr = std::to_string(versionMajor);
-    std::string vminStr = std::to_string(versionMinor);
-    std::string vrevStr = std::to_string(versionRevision);
-    std::string vcStr = vmajStr + "." + vminStr + "." + vrevStr;
-    std::string versionCombined = "Version " + releaseStageStringsS[releaseStage] + vcStr;
-    music.openFromFile(titleTrack);
+    std::string versionCombined = getFileLine(strVersionHdr) + getFileLine(strRSShort+releaseStage) + getFileLine(strVersionNum);
+    music.openFromFile(getFileLine(resTitleMus,&resList));
     music.setLoop(true);
     music.play();
     sf::Texture titleTexture;
-    titleTexture.loadFromFile(titleImg);
+    titleTexture.loadFromFile(getFileLine(resTitleLogo,&resList));
     sf::RectangleShape titleSprite(sf::Vector2f(titleTexture.getSize()));
     titleSprite.setTexture(&titleTexture);
     sf::Vector2f titleImgSize(320 * scaleFactor, 48 * scaleFactor);
@@ -98,7 +83,7 @@ void title()
     titleSprite.setPosition(pixelToTile(7),0);
     types::u32 color = RGB4toRGB8(0x0224);
     sf::Texture titleBGTexture;
-    titleBGTexture.loadFromFile(titleBG);
+    titleBGTexture.loadFromFile(getFileLine(resTitleBG,&resList));
     sf::RectangleShape titleRect;
     titleRect.setTexture(&titleBGTexture);
     titleRect.setSize(sf::Vector2f(window.getSize()));
@@ -107,15 +92,15 @@ void title()
     {
         window.clear(sf::Color(color));
         window.draw(titleRect);
-        drawBitmapFont("}TheWindowsPro98 2023",{0,29});
+        drawBitmapFont(getFileLine(strCopyInfo),{0,29});
         drawBitmapFont(versionCombined,{6.75,6});
         if (sf::Joystick::isConnected(0))
         {
-            drawBitmapFont("Press START Button",{17.625,15});
+            drawBitmapFont(getFileLine(strStartTxt),{17.625,15});
         }
         else
         {
-            drawBitmapFont("Press ENTER Key",{19.125,15});
+            drawBitmapFont(getFileLine(strStartTxtKB),{19.125,15});
         }
         window.draw(titleSprite);
         screenFade(volFadeSpeed,true,fadeDark);

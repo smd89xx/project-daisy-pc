@@ -11,13 +11,12 @@
 #include <SFML/Audio.hpp>
 #include <SFML/System.hpp>
 #include "types.hxx"
-#include "resources.hxx"
 #include "version.hxx"
 #include "structs.hxx"
 #include "savescrn.hxx"
 #include "title.hxx"
 #include "jukebox.hxx"
-#include "prefs.hxx"
 #include "utils.hxx"
+#include "prefs.hxx"
 #include "game.hxx"
 #include "collision.hxx"

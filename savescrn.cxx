@@ -2,9 +2,6 @@
 
 const types::u8 saveX = 0;
 const types::u8 saveY = 2;
-const std::string diffStrs[] = {"Easy","Normal","Hard","Legend"};
-const std::string lvlStrs[] = {"Testing Grounds","To be determined"};
-const std::string blankString = "";
 sf::Texture* saveBG;
 
 enum saveDestinations
@@ -22,21 +19,21 @@ static void exitEvent()
 
 static void setLvlBG()
 {
-    std::string* file;
+    std::string file;
     switch (saveSlots[slotIndex].level)
     {
         case 0:
         {
-            file = (std::string*)&testLvlBG;
+            file = getFileLine(resTestLvlBG,&resList);
             break;
         }
         default:
         {
-            printerr(badLevelErr,"setLvlBG()");
+            printerr(badLevelErr,getFileLine(strldLvlBGFunc));
             break;
         }
     }
-    saveBG->loadFromFile(*file);
+    saveBG->loadFromFile(file);
     saveBG->setRepeated(true);
 }
 
@@ -113,7 +110,7 @@ static void selectSave(types::u8 destination)
         }
         default:
         {
-            printerr(missingFuncErr,"selectSave(unsigned char)");
+            printerr(missingFuncErr,getFileLine(strSelectSaveFunc));
             break;
         }
     }
@@ -151,14 +148,14 @@ void saveScreen()
     saveBG = new sf::Texture;
     setLvlBG();
     fadeRect.setFillColor(sf::Color::Black);
-    music.openFromFile(lsTrack);
+    music.openFromFile(getFileLine(resPrefsMus,&resList));
     music.setLoop(true);
     music.play();
     types::u32 color = RGB4toRGB8(0x086C);
     sf::Texture plrIcon;
-    plrIcon.loadFromFile(hudIcons);
+    plrIcon.loadFromFile(getFileLine(resHUDIcons,&resList));
     sf::Texture barTextures;
-    barTextures.loadFromFile(barImg);
+    barTextures.loadFromFile(getFileLine(resHealthbarTextures,&resList));
     sf::RectangleShape iconDrawable(sf::Vector2f({16,16}));
     iconDrawable.setTexture(&plrIcon);
     iconDrawable.setScale(scaleFactor,scaleFactor);
@@ -179,31 +176,31 @@ void saveScreen()
     sf::RectangleShape lvlBG;
     lvlBG.setTexture(saveBG);
     lvlBG.setSize(sf::Vector2f(window.getSize()));
-    float scroll;
+    float scroll = 0;
     while (window.isOpen())
     {
         healthMeter.setFillColor(playerColors[saveSlots[slotIndex].player]);
         healthMeter.setSize(sf::Vector2f(saveSlots[slotIndex].health/5,8));
-        livesStr.str(blankString);
-        scoreStr.str(blankString);
-        livesStr << "|" << std::setfill('0') << std::setw(3) << (types::u16)saveSlots[slotIndex].lives;
-        scoreStr << "{" << std::setfill('0') << std::setw(8) << saveSlots[slotIndex].score;
+        livesStr.str(getFileLine(strEmpty));
+        scoreStr.str(getFileLine(strEmpty));
+        livesStr << getFileLine(strKeyPipe) << std::setfill('0') << std::setw(3) << (types::u16)saveSlots[slotIndex].lives;
+        scoreStr << getFileLine(strKeyLCurlBracket) << std::setfill('0') << std::setw(8) << saveSlots[slotIndex].score;
         iconDrawable.setTextureRect({16*(saveSlots[slotIndex].player),0,16,16});
-        scroll += 0.3334;
+        scroll += 1.0f/3.0f;
         lvlBG.setTextureRect({(types::u16)scroll,0,426,240});
         window.clear(sf::Color(color));
         window.draw(lvlBG);
-        drawBitmapFont("Save " + std::to_string(slotIndex) + ":",{saveX,saveY});
-        drawBitmapFont(playerNames[saveSlots[slotIndex].player],{2,0});
-        drawBitmapFont("Difficulty: " + diffStrs[saveSlots[slotIndex].difficulty],{saveX+2,saveY+1});
-        drawBitmapFont("Level: " + lvlStrs[saveSlots[slotIndex].level],{saveX+2,saveY+2});
+        drawBitmapFont(getFileLine(strSaveHdr) + std::to_string(slotIndex) + getFileLine(strKeyColon),{saveX,saveY});
+        drawBitmapFont(getFileLine(strPlrNames+saveSlots[slotIndex].player),{2,0});
+        drawBitmapFont(getFileLine(strDiffHdr) + getFileLine(strDiffs+saveSlots[slotIndex].difficulty),{saveX+2,saveY+1});
+        drawBitmapFont(getFileLine(strLvlHdr) + getFileLine(strLvlNames+saveSlots[slotIndex].level),{saveX+2,saveY+2});
         drawBitmapFont(livesStr.str(),{21.5,1});
         drawBitmapFont(scoreStr.str(),{12,0});
         displayHints();
-        drawBitmapFont("No Save:",{saveX,saveY+4});
-        drawBitmapFont("Difficulty: " + diffStrs[saveSlots[maxSlots].difficulty],{saveX+2,saveY+5});
-        drawBitmapFont("Level: " + lvlStrs[saveSlots[maxSlots].level],{saveX+2,saveY+6});
-        drawBitmapFont("Player: " + playerNames[saveSlots[maxSlots].player],{saveX+2,saveY+7});
+        drawBitmapFont(getFileLine(strNoSaveHdr),{saveX,saveY+4});
+        drawBitmapFont(getFileLine(strDiffHdr) + getFileLine(strDiffs+saveSlots[maxSlots].difficulty),{saveX+2,saveY+5});
+        drawBitmapFont(getFileLine(strLvlHdr) + getFileLine(strLvlNames+saveSlots[maxSlots].level),{saveX+2,saveY+6});
+        drawBitmapFont(getFileLine(strPlrHdr) + getFileLine(strPlrNames+saveSlots[slotIndex].player),{saveX+2,saveY+7});
         window.draw(iconDrawable);
         window.draw(healthbar);
         window.draw(healthMeter);

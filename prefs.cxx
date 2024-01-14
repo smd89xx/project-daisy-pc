@@ -10,14 +10,14 @@ const float exitXDelta = jukeboXDelta + 3.75;
 const types::u8 prefsMenuAmnt = 8;
 const structs::Option prefsMenu[] = 
 {
-    {prefsX+diffXDelta, prefsY, "Easy"},
-    {prefsX+diffXDelta, prefsY+1.25, "Normal"},
-    {prefsX+diffXDelta, prefsY+2.5, "Hard"},
-    {prefsX+diffXDelta, prefsY+3.75, "Legend"},
-    {prefsX+plrXDelta, prefsY+6.25, "Lucy"},
-    {prefsX+plrXDelta, prefsY+7.5, "Stephanie"},
-    {prefsX+jukeboXDelta,prefsY+10,"The Jukebox"},
-    {prefsX+exitXDelta, prefsY+12.5, "Exit"}
+    {prefsX+diffXDelta, prefsY, getFileLine(strDiffs)},
+    {prefsX+diffXDelta, prefsY+1.25, getFileLine(strDiffs+1)},
+    {prefsX+diffXDelta, prefsY+2.5, getFileLine(strDiffs+2)},
+    {prefsX+diffXDelta, prefsY+3.75, getFileLine(strDiffs+3)},
+    {prefsX+plrXDelta, prefsY+6.25, getFileLine(strPlrNames)},
+    {prefsX+plrXDelta, prefsY+7.5, getFileLine(strPlrNames+1)},
+    {prefsX+jukeboXDelta,prefsY+10, getFileLine(strJukebox)},
+    {prefsX+exitXDelta, prefsY+12.5, getFileLine(strExit)}
 };
 
 static void updConfOutline()
@@ -124,7 +124,7 @@ static void selectMenuPrefs()
         }
         default:
         {
-            printerr(missingFuncErr,"selectMenuPrefs()");
+            printerr(missingFuncErr,getFileLine(strMenuPrefsFunc));
             break;
         }
     }
@@ -191,32 +191,29 @@ static void changeScale(bool direction)
 static void drawBtnHints()
 {
     std::stringstream scalePromptCmb;
-    std::string emptyString = "";
-    std::string scalePromptMainTxt = ": -/+ scaling";
-    std::string scaleFactorStr = " (Current scale factor: ";
     bool joyConnected = sf::Joystick::isConnected(0);
     if (joyConnected)
     {
-        scalePromptCmb.str(emptyString);
-        scalePromptCmb << btnPrompts[buttonL1] << "/" << btnPrompts[buttonR1] << scalePromptMainTxt << scaleFactorStr << (types::u16)scaleFactor << ")";
-        drawBitmapFont(btnPrompts[dpadUp] + "/" + btnPrompts[dpadDown] + ": Change selection",{0,28});
-        drawBitmapFont(btnPrompts[buttonCircle] + ": Exit",{0,27});
-        drawBitmapFont(btnPrompts[buttonCross] + ": Decision",{0,26});
+        scalePromptCmb.str(getFileLine(strEmpty));
+        scalePromptCmb << btnPrompts[buttonL1] << getFileLine(strKeySlash) << btnPrompts[buttonR1] << getFileLine(strIncDec) << getFileLine(strScaling) << (types::u16)scaleFactor << getFileLine(strKeyRParam);
+        drawBitmapFont(btnPrompts[dpadUp] + getFileLine(strKeySlash) + btnPrompts[dpadDown] + getFileLine(strHoverPrompt),{0,28});
+        drawBitmapFont(btnPrompts[buttonCircle] + getFileLine(strExitPrompt),{0,27});
+        drawBitmapFont(btnPrompts[buttonCross] + getFileLine(strDecisionPrompt),{0,26});
     }
     else
     {
-        scalePromptCmb.str(emptyString);
-        scalePromptCmb << "Left/Right" << scalePromptMainTxt << scaleFactorStr << (types::u16)scaleFactor << ")";
-        drawBitmapFont("Up/Down: Change selection",{0,28});
-        drawBitmapFont("Escape: Exit",{0,27});
-        drawBitmapFont("Enter: Decision",{0,26});
+        scalePromptCmb.str(getFileLine(strEmpty));
+        scalePromptCmb << getFileLine(strKeyLArrow) << getFileLine(strKeySlash) << getFileLine(strKeyRArrow) << getFileLine(strIncDec) << getFileLine(strScaling) << (types::u16)scaleFactor << getFileLine(strKeyRParam);
+        drawBitmapFont(getFileLine(strKeyUArrow) + getFileLine(strKeySlash) + getFileLine(strKeyDArrow) + getFileLine(strHoverPrompt),{0,28});
+        drawBitmapFont(getFileLine(strKeyEscape) + getFileLine(strExitPrompt),{0,27});
+        drawBitmapFont(getFileLine(strKeyEnter) + getFileLine(strDecisionPrompt),{0,26});
     }
     drawBitmapFont(scalePromptCmb.str(),{0,29});
 }
 
 void prefsScreen()
 {
-    music.openFromFile(lsTrack);
+    music.openFromFile(getFileLine(resPrefsMus,&resList));
     music.play();
     menuIndex = 0;
     fadeRect.setFillColor(sf::Color::Black);
@@ -224,8 +221,8 @@ void prefsScreen()
     while (window.isOpen())
     {
         window.clear(sf::Color(color));
-        drawBitmapFont("Difficulty:",{prefsX,prefsY});
-        drawBitmapFont("Player:",{prefsX,prefsY+6.25});
+        drawBitmapFont(getFileLine(strDiffHdr),{prefsX,prefsY});
+        drawBitmapFont(getFileLine(strPlrHdr),{prefsX,prefsY+6.25});
         drawBtnHints();
         updConfOutline();
         drawMenu(prefsMenu, prefsMenuAmnt);

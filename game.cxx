@@ -11,9 +11,9 @@ const types::u8 pauseY = 13;
 const types::u8 pauseOptsAmnt = 3;
 const structs::Option pauseMenu[] = 
 {
-    {pauseX,pauseY,"Return to Game"},
-    {pauseX,pauseY+1.25,"Save and Exit"},
-    {pauseX,pauseY+2.5,"Exit Without Saving"}
+    {pauseX,pauseY,getFileLine(strUnpause)},
+    {pauseX,pauseY+1.25,getFileLine(strExitSave)},
+    {pauseX,pauseY+2.5,getFileLine(strExitNoSave)}
 };
 const types::u8 collisionRectAmounts[] = {5};
 bool* runThread;
@@ -35,7 +35,6 @@ const structs::AnimMData playerAnimData[2][3] =
 };
 sf::Texture* hudTexture;
 sf::Texture* healthTexture;
-const std::string playerNames[] = {"Lucy","Stephanie"};
 structs::PlayerMData* playerObj;
 std::thread* collisionThread;
 types::u8* frameTimer;
@@ -47,6 +46,13 @@ enum playerAnimIDs
     playerWalking,
     playerJumping,
 };
+sf::RectangleShape* water;
+const types::u16 waterColors[] = {0x007E}; // Uses multiply blending (subject to change)
+const types::u32 waterLevels[] = {360};
+types::u8* waterTimer;
+types::u8* waterSubTmr;
+sf::Texture* waveTexture;
+sf::Sprite* waveSpr;
 
 static void camPos()
 {
@@ -93,6 +99,25 @@ static void camPos()
     lvlFG->setTextureRect(sf::IntRect(sf::Vector2i(*cameraPositions),sf::Vector2i(window.getSize().x / scaleFactor, window.getSize().y / scaleFactor)));
 }
 
+static void initWater()
+{
+    types::u32 color = RGB4toRGB8(waterColors[saveSlots[slotIndex].level]);
+    water = new sf::RectangleShape;
+    types::u32 levelHeight = lvlPxFG->getSize().x;
+    water->setSize(sf::Vector2f(window.getSize().x,levelHeight));
+    water->setFillColor(sf::Color(color));
+    waterTimer = new types::u8(30);
+    waterSubTmr = new types::u8(60);
+    waveTexture = new sf::Texture;
+    waveTexture->loadFromFile(getFileLine(resWaveSpr,&resList));
+    waveTexture->setRepeated(true);
+    waveSpr = new sf::Sprite(*waveTexture);
+    waveSpr->setScale(scaleFactor,scaleFactor);
+    waveSpr->setTextureRect(sf::IntRect(0,0,window.getSize().x,8));
+    waveSpr->setColor(sf::Color(color));
+    sbGame->loadFromFile(getFileLine(resWarningBellSFX,&resList));
+}
+
 static const sf::IntRect* loadMap()
 {
     lvlFG = new sf::RectangleShape;
@@ -105,13 +130,13 @@ static const sf::IntRect* loadMap()
     {
     case 0:
     {
-        lvlPxBG->loadFromFile(testLvlBG);
-        lvlPxFG->loadFromFile(testLvlFG);
+        lvlPxBG->loadFromFile(getFileLine(resTestLvlBG,&resList));
+        lvlPxFG->loadFromFile(getFileLine(resTestLvlFG,&resList));
         lvlBG->setTexture(lvlPxBG);
         lvlFG->setTexture(lvlPxFG);
         playerObj->position.x = 48;
         playerObj->position.y = 160;
-        music.openFromFile(lfTrack);
+        music.openFromFile(getFileLine(resTestLvlMus,&resList));
         music.setLoop(true);
         music.play();
         return nullptr;
@@ -184,7 +209,7 @@ static void gameInputHdl()
     bool downPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Down) || (YPos == 100);
     if (leftPressed)
     {
-        if (!*isJumping)
+        if (*isJumping)
         {
             *animIndex = playerWalking;
         }
@@ -208,8 +233,23 @@ static void gameInputHdl()
         }
         playerObj->velocity.x = 0;
     }
+    if (upPressed)
+    {
+        *animIndex = playerWalking;
+        playerObj->velocity.y = -1.5;
+    }
+    else if (downPressed)
+    {
+        *animIndex = playerWalking;
+        playerObj->velocity.y = 1.5;
+    }
+    else
+    {
+        playerObj->velocity.y = 0;
+    }
 }
 
+// This is starting to get a bit ridiculous
 static void gameCleanup()
 {
     delete cameraPositions;
@@ -230,6 +270,11 @@ static void gameCleanup()
     delete frameTimer;
     delete frameIndex;
     delete animIndex;
+    delete water;
+    delete waterTimer;
+    delete waterSubTmr;
+    delete waveSpr;
+    delete waveTexture;
 }
 
 static void gameBack()
@@ -295,7 +340,7 @@ static void selectMenuPause()
     }
     default:
     {
-        printerr(missingFuncErr,"selectMenuPause()");
+        printerr(missingFuncErr,getFileLine(strPauseMenuFunc));
         break;
     }
     }
@@ -303,17 +348,17 @@ static void selectMenuPause()
 
 static void spawnPlayer()
 {
-    const std::string* playerTexturePath;
+    std::string playerTexturePath;
     if (saveSlots[slotIndex].player)
     {
-        playerTexturePath = &placeholderSpr;
+        playerTexturePath = getFileLine(resAnimTestSpr,&resList);
     }
     else
     {
-        playerTexturePath = &placeholderSpr;
+        playerTexturePath = getFileLine(resAnimTestSpr,&resList);
     }
     playerObj = new structs::PlayerMData;
-    playerObj->texture.loadFromFile(*playerTexturePath);
+    playerObj->texture.loadFromFile(playerTexturePath);
     playerObj->sprite.setTexture(playerObj->texture);
     playerObj->sprite.setTextureRect({0,0,32,32});
     playerObj->sprite.setScale(sf::Vector2f(scaleFactor,scaleFactor));
@@ -373,7 +418,7 @@ static void jump()
         return;
     }
     *animIndex = playerJumping;
-    sbGame->loadFromFile(jumpSFX);
+    sbGame->loadFromFile(getFileLine(resJumpSFX,&resList));
     sndGame->setBuffer(*sbGame);
     sndGame->play();
     playerObj->position.y -= 5;
@@ -386,9 +431,9 @@ static void drawHUD()
     sf::RectangleShape hudIcon{sf::Vector2f(hudTexture->getSize())};
     hudIcon.setScale(scaleFactor,scaleFactor);
     hudIcon.setTexture(hudTexture);
-    drawBitmapFont(playerNames[saveSlots[slotIndex].player],{2,0});
+    drawBitmapFont(getFileLine(strPlrNames+saveSlots[slotIndex].player),{2,0});
     std::stringstream scoreStr;
-    scoreStr << "{" << std::setfill('0') << std::setw(8) << saveSlots[slotIndex].score;
+    scoreStr << getFileLine(strKeyLCurlBracket) << std::setfill('0') << std::setw(8) << saveSlots[slotIndex].score;
     drawBitmapFont(scoreStr.str(),{12,0});
     sf::RectangleShape healthbar(sf::Vector2f(152,8));
     healthbar.setScale(scaleFactor,scaleFactor);
@@ -405,20 +450,23 @@ static void drawHUD()
     healthCap.setTextureRect({8,0,8,8});
     healthCap.setPosition(pixelToTile(21),pixelToTile(1));
     std::stringstream livesStr;
-    livesStr << "|" << std::setfill('0') << std::setw(3) << (types::u16)saveSlots[slotIndex].lives;
+    livesStr << getFileLine(strKeyPipe) << std::setfill('0') << std::setw(3) << (types::u16)saveSlots[slotIndex].lives;
     drawBitmapFont(livesStr.str(),{21.5,1});
     std::stringstream pxStr;
-    pxStr << "PX: " << std::showpoint << std::fixed << std::setprecision(3) << playerObj->position.x;
+    pxStr << getFileLine(strKeyP) << getFileLine(strXPos) << std::showpoint << std::fixed << std::setprecision(3) << playerObj->position.x;
     drawBitmapFont(pxStr.str(),{0,2});
     std::stringstream pyStr;
-    pyStr << "PY: " << std::showpoint << std::fixed << std::setprecision(3) << playerObj->position.y;
+    pyStr << getFileLine(strKeyP) << getFileLine(strYPos) << std::showpoint << std::fixed << std::setprecision(3) << playerObj->position.y;
     drawBitmapFont(pyStr.str(),{0,3});
     std::stringstream cxStr;
-    cxStr << "PX: " << std::showpoint << std::fixed << std::setprecision(3) << cameraPositions->x;
+    cxStr << getFileLine(strKeyC) << getFileLine(strXPos) << std::showpoint << std::fixed << std::setprecision(3) << cameraPositions->x;
     drawBitmapFont(cxStr.str(),{0,4});
     std::stringstream cyStr;
-    cyStr << "PY: " << std::showpoint << std::fixed << std::setprecision(3) << cameraPositions->y;
+    cyStr << getFileLine(strKeyC) << getFileLine(strYPos) << std::showpoint << std::fixed << std::setprecision(3) << cameraPositions->y;
     drawBitmapFont(cyStr.str(),{0,5});
+    std::stringstream waterTimerStr;
+    waterTimerStr << getFileLine(strWaterTimer) << (types::u16)*waterTimer << getFileLine(strKeyPeriod) << (types::u16)*waterSubTmr;
+    drawBitmapFont(waterTimerStr.str(),{0,6});
     window.draw(hudIcon);
     window.draw(healthbar);
     window.draw(healthMeter);
@@ -430,8 +478,8 @@ static void initHUD()
     hudTexture = new sf::Texture;
     healthTexture = new sf::Texture;
     sf::IntRect iconTextureRect = {16*saveSlots[slotIndex].player,0,16,16};
-    hudTexture->loadFromFile(hudIcons,iconTextureRect);
-    healthTexture->loadFromFile(barImg);
+    hudTexture->loadFromFile(getFileLine(resHUDIcons,&resList),iconTextureRect);
+    healthTexture->loadFromFile(getFileLine(resHealthbarTextures,&resList));
 }
 
 static void drawBtnHints()
@@ -440,15 +488,57 @@ static void drawBtnHints()
     types::u8 startButton = startBtnID();
     if (joyConnected)
     {
-        drawBitmapFont(btnPrompts[dpadUp] + "/" + btnPrompts[dpadDown] + ": Change selection",{0,29});
-        drawBitmapFont(btnPrompts[startButton] + ": Unpause",{0,28});
-        drawBitmapFont(btnPrompts[buttonCross] + ": Decision",{0,27});
+        drawBitmapFont(btnPrompts[dpadUp] + getFileLine(strKeySlash) + btnPrompts[dpadDown] + getFileLine(strHoverPrompt),{0,29});
+        drawBitmapFont(btnPrompts[startButton] + getFileLine(strUnpausePrompt),{0,28});
+        drawBitmapFont(btnPrompts[buttonCross] + getFileLine(strDecisionPrompt),{0,27});
     }
     else
     {
-        drawBitmapFont("Up/Down: Change selection",{0,29});
-        drawBitmapFont("Escape: Unpause",{0,28});
-        drawBitmapFont("Enter: Decision",{0,27});
+        drawBitmapFont(getFileLine(strKeyUArrow) + getFileLine(strKeySlash) + getFileLine(strKeyDArrow) + getFileLine(strHoverPrompt),{0,29});
+        drawBitmapFont(getFileLine(strKeyEscape) + getFileLine(strUnpausePrompt),{0,28});
+        drawBitmapFont(getFileLine(strKeyEnter) + getFileLine(strDecisionPrompt),{0,27});
+    }
+}
+
+static void updateWater()
+{
+    types::u32 waterLevel = waterLevels[saveSlots[slotIndex].level] * scaleFactor;
+    types::s32 waterScreenLevel = waterLevel - cameraPositions->y * scaleFactor;
+    water->setPosition(0,waterScreenLevel);
+    waveSpr->setPosition(0,waterScreenLevel - 7 * scaleFactor);
+    waveSpr->setTextureRect(sf::IntRect(cameraPositions->x * (4.0f / 3.0f),0,window.getSize().x,8));
+    if (playerObj->position.y < waterLevel / scaleFactor)
+    {
+        *waterTimer = 30;
+        *waterSubTmr = 60;
+    }
+    else
+    {
+        (*waterSubTmr)--;
+        if (*waterSubTmr == 0)
+        {
+            (*waterTimer)--;
+            *waterSubTmr = 60;
+        }
+        if (*waterTimer % 5 == 0 && *waterSubTmr == 1 && *waterTimer > 10)
+        {
+            sndGame->play();
+        }
+        else if (*waterTimer % 2 == 0 && *waterSubTmr == 1 && *waterTimer < 10)
+        {
+            sndGame->play();
+        }
+        else if (*waterTimer == 0)
+        {
+            *waterTimer = 0;
+            *waterSubTmr = 0;
+        }
+        (*waterSubTmr)--;
+        if (*waterSubTmr == 0)
+        {
+            (*waterTimer)--;
+            *waterSubTmr = 60;
+        }
     }
 }
 
@@ -459,18 +549,18 @@ void gameInit()
     isPaused = new bool(false);
     runThread = new bool(true);
     sbGame = new sf::SoundBuffer;
-    sndGame = new sf::Sound;
+    sndGame = new sf::Sound(*sbGame);
     frameTimer = new types::u8(0);
     frameIndex = new types::u8(0);
     animIndex = new types::u16(0);
     spawnPlayer();
     const sf::IntRect* collisionArray = loadMap();
+    initWater();
     initHUD();
     collisionThread = new std::thread(chkCollision,collisionArray);
     types::u8 startButton = startBtnID();
     while (window.isOpen())
     {
-        manageAnim();
         window.clear(sf::Color::Black);
         window.draw(*lvlBG);
         window.draw(*lvlFG);
@@ -481,6 +571,8 @@ void gameInit()
             gameInputHdl();
             camPos();
             updatePlayer();
+            updateWater();
+            manageAnim();
             fadeMusic(false,volFadeSpeed,volMax);
             screenFade(volFadeSpeed,true,fadeDark);
         }
@@ -491,6 +583,8 @@ void gameInit()
             drawMenu(pauseMenu,pauseOptsAmnt);
             drawBtnHints();
         }
+        window.draw(*waveSpr,sf::BlendAdd);
+        window.draw(*water,sf::BlendMultiply);
         window.display();
         while (window.pollEvent(e))
         {
@@ -550,7 +644,7 @@ void gameInit()
                     }
                     if (e.joystickButton.button == buttonCross)
                     {
-                        jump();
+                        //jump();
                     }
                 }
                 else

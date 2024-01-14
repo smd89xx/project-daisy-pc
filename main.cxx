@@ -1,21 +1,14 @@
 #include "inc/includes.hxx"
 
-const char dot = '.';
-const char space = ' ';
-
 static void initAssets()
 {
-    std::string vmajStr = std::to_string(versionMajor);
-    std::string vminStr = std::to_string(versionMinor);
-    std::string vrevStr = std::to_string(versionRevision);
-    std::string vcStr = vmajStr + dot + vminStr + dot + vrevStr;
-    std::string titleStr = programTitle + space + releaseStageStringsL[releaseStage] + space + vcStr + space + buildTitle;
+    std::string titleStr = getFileLine(strGameTitle) + getFileLine(strSpace) + getFileLine(strRSLong+releaseStage) + getFileLine(strSpace) + getFileLine(strVersionNum) + getFileLine(strSpace) + getFileLine(strBuildNum);
     window.setTitle(titleStr);
     sf::Image icon;
-    bool assetsChk = icon.loadFromFile(favicon) & font.loadFromFile(scpTTF) & sbHvr.loadFromFile(hoverSFX) & sbCnf.loadFromFile(confSFX) & sbBack.loadFromFile(backSFX) & bitmapFont.loadFromFile(pixelFont) & cursorTexture.loadFromFile(cursorImg);
+    bool assetsChk = icon.loadFromFile(getFileLine(resIcon,&resList)) & font.loadFromFile(getFileLine(resMonoTTF,&resList)) & sbHvr.loadFromFile(getFileLine(resHvrSFX,&resList)) & sbCnf.loadFromFile(getFileLine(resDecisionSFX,&resList)) & sbBack.loadFromFile(getFileLine(resBackSFX,&resList)) & bitmapFont.loadFromFile(getFileLine(resBMPFont,&resList)) & cursorTexture.loadFromFile(getFileLine(resCursor,&resList));
     if (!assetsChk)
     {
-        printerr(missingAssetsErr,"initAssets()",true);
+        printerr(missingAssetsErr,getFileLine(strInitAssetFunc),true);
     }
     window.setIcon(icon.getSize().x,icon.getSize().y,icon.getPixelsPtr());
     font.setSmooth(false);
@@ -26,7 +19,7 @@ static void initAssets()
     sndBack.setBuffer(sbBack);
     templateText.setFont(font);
     templateText.setCharacterSize(fontSize * scaleFactor);
-    templateText.setString("Default string.");
+    templateText.setString(getFileLine(strDefault));
     templateText.setOutlineThickness((3.5 / 3) * scaleFactor);
 }
 
@@ -36,7 +29,7 @@ static void initSRAM()
     {
         saveRAM[i] = 0;
     }
-    saveFile.open(saveFileLocation,std::ios::in);
+    saveFile.open(getFileLine(resSaveFile,&resList),std::ios::in);
     if (!saveFile)
     {
         for (types::u16 i = 0; i < maxSlots; i++)
@@ -46,10 +39,10 @@ static void initSRAM()
         saveRAM[addrScaling] = scaleFactor;
         saveRAM[addrVerInf] = saveVersion;
         saveFile.close();
-        saveFile.open(saveFileLocation,std::ios::out);
+        saveFile.open(getFileLine(resSaveFile,&resList),std::ios::out);
         saveFile.write(saveRAM,sizeof(saveRAM));
         saveFile.close();
-        saveFile.open(saveFileLocation,std::ios::in);
+        saveFile.open(getFileLine(resSaveFile,&resList),std::ios::in);
     }
     saveFile.read(saveRAM,sizeof(saveRAM));
     saveFile.close();
@@ -70,7 +63,19 @@ static void chkChecksum()
     }
     if (ogChkSum != checksum)
     {
-        printerr(invalidChecksum,"chkChecksum()",true);
+        printerr(invalidChecksum,getFileLine(strChkChksum),true);
+    }
+}
+
+static void writeJoyStrings(types::u16 startLine)
+{
+    for (types::u8 i = 0; i < 13; i++)
+    {
+        btnPrompts[i] = getFileLine(startLine+i);
+    }
+    for (types::u8 i = 0; i < 4; i++)
+    {
+        btnPrompts[i+13] = getFileLine(strDPADDirs+i);
     }
 }
 
@@ -83,23 +88,23 @@ static void chkJoypadVendor()
     {
         case ds4VID:
         {
-            btnPrompts = (std::string*)ds4Prompts;
+            writeJoyStrings(strBtnPS);
             break;
         }
         case xb1CCVID:
         {
-            btnPrompts = (std::string*)xb1Prompts;
+            writeJoyStrings(strBtnXbox);
             break;
         }
         default:
         {
             if (joyConnected)
             {
-                printerr(missingAssetsErr,"chkJoypadVendor()");
+                printerr(missingAssetsErr,getFileLine(strChkJPVendor));
             }
             else
             {
-                btnPrompts = (std::string*)ds4Prompts;
+                writeJoyStrings(strBtnXbox);
             }
             break;
         }
@@ -117,7 +122,7 @@ int main(int argc, char** argv)
     updScreenSize();
     if (saveVersion_SRAM != saveVersion)
     {
-        printerr(invalidSRAMVersion,"main(int,char**)");
+        printerr(invalidSRAMVersion,getFileLine(strMain));
     }
     title();
     return 0;
