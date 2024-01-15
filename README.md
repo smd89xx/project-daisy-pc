@@ -3,6 +3,12 @@ Project Daisy (PC Edition)
 
 It's a PC game thing.
 
+## Important Note
+
+This branch is unmaintained and only exists to preserve the original codebase.
+
+Use the [main](https://github.com/TheWindowsPro98/project-daisy-pc/tree/main) branch instead.
+
 ## Dependencies
 
  - [SFML](https://www.sfml-dev.org/)
@@ -37,7 +43,7 @@ and you will have an executable binary.
 
 ### On Windows
 
-#### Important Note 2
+#### Important Note
 
 Windows building does not currently work. Will fix later, and also may shove SFML into a submodule.
 
