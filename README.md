@@ -7,7 +7,7 @@ It's a PC game thing.
 
 This branch is unmaintained and only exists to preserve the original codebase.
 
-Use the [main](https://github.com/TheWindowsPro98/project-daisy-pc/tree/main) branch instead.
+Use the [main](https://github.com/TheWindowsPro98/project-daisy-pc/) branch instead.
 
 ## Dependencies
 
