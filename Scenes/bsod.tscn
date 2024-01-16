@@ -1,0 +1,60 @@
+[gd_scene load_steps=4 format=3 uid="uid://lg3vdm8iok0k"]
+
+[ext_resource type="Script" path="res://Source/bsod.cs" id="1_f2bvk"]
+[ext_resource type="AudioStream" uid="uid://4mtjqcv152hl" path="res://Audio/SFX/sad.wav" id="2_b011u"]
+[ext_resource type="LabelSettings" uid="uid://d0komd655mqgx" path="res://Fonts/fontcfg.tres" id="2_moug2"]
+
+[node name="bsodScrn" type="Node2D"]
+script = ExtResource("1_f2bvk")
+
+[node name="crashChime" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("2_b011u")
+autoplay = true
+
+[node name="BGColor" type="ColorRect" parent="."]
+offset_right = 426.0
+offset_bottom = 240.0
+color = Color(0, 0, 0, 1)
+
+[node name="BSOD_ShutDownTxt" type="Label" parent="."]
+offset_right = 48.0
+offset_bottom = 8.0
+text = "A problem has been detected and your game has been
+shut down."
+label_settings = ExtResource("2_moug2")
+
+[node name="BSOD_CauseTxt" type="Label" parent="."]
+offset_top = 24.0
+offset_right = 40.0
+offset_bottom = 32.0
+text = "The problem seems to be caused by the following:
+(cause of BSoD)"
+label_settings = ExtResource("2_moug2")
+
+[node name="BSOD_StopTxt" type="Label" parent="."]
+offset_top = 48.0
+offset_right = 40.0
+offset_bottom = 56.0
+text = "ERROR_BSOD_STOPCODE"
+label_settings = ExtResource("2_moug2")
+
+[node name="BSOD_BodyTxt" type="Label" parent="."]
+offset_top = 64.0
+offset_right = 40.0
+offset_bottom = 72.0
+text = "If this is the first time you've seen this screen,
+restart this game (press START). This will make an
+attempt at fixing any problems you may be having.
+
+If the problems persist, check for any updates made
+to the software. If there are none, consider
+contacting the developer for a potential fix."
+label_settings = ExtResource("2_moug2")
+
+[node name="BSOD_HexTxt" type="Label" parent="."]
+offset_top = 136.0
+offset_right = 40.0
+offset_bottom = 159.0
+text = "Technical Information:
+***** STOP: 0x00000000"
+label_settings = ExtResource("2_moug2")
