@@ -3,6 +3,7 @@ using System;
 
 public partial class bsod : Node2D
 {
+	GDScript fadeScript = GD.Load<GDScript>(Daisy.Resources.fadeScript);
 	public override void _Ready()
 	{
 		var bsodStopStr = GetNode<Label>("BSOD_StopTxt");
@@ -11,8 +12,9 @@ public partial class bsod : Node2D
 		bsodCauseStr.Text = "The problem seems to be caused by the following:\n" + Daisy.Globals.BSoD.crashOrigin;
 		var bsodHexStr = GetNode<Label>("BSOD_HexTxt");
 		bsodHexStr.Text = "Technical Information:\n***** STOP: 0x" + Convert.ToString(Daisy.Globals.BSoD.stopcode,16);
+		fadeScript.Call("fade_in",0.1);
 	}
-	private void bsodExit()
+	private void BSODExit()
 	{
 		switch (Daisy.Globals.BSoD.stopcode)
 		{
@@ -23,15 +25,15 @@ public partial class bsod : Node2D
 			}
 		}
 	}
-	private void handleInput()
+	private void HandleInput()
 	{
-		if (Input.IsActionJustPressed(Daisy.InputMap.bsodExit))
+		if (Input.IsActionJustPressed("bsod_exit"))
 		{
-			bsodExit();
+			BSODExit();
 		}
 	}
 	public override void _Process(double delta)
 	{
-		handleInput();
+		HandleInput();
 	}
 }

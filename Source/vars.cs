@@ -7,6 +7,7 @@ namespace Daisy
     {
         public const string bsodScreen = "res://Scenes/bsod.tscn";
         public const string titleScreen = "res://Scenes/title.tscn";
+        public const string fadeScript = "res://addons/UniversalFade/Fade.gd";
     }
     class Settings
     {
@@ -22,11 +23,5 @@ namespace Daisy
             public static readonly string[] stopStrings = {"ERROR_GENERIC"};
             public static string crashOrigin = "vars.cs";
         }
-    }
-    class InputMap
-    {
-        public const string titleStart = "title_start";
-        public const string bsodExit = "bsod_exit";
-        public const string titleExit = "title_exit";
     }
 }

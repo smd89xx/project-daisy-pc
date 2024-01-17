@@ -1,10 +1,12 @@
-[gd_scene load_steps=6 format=3 uid="uid://ce5oaiyhmu7tn"]
+[gd_scene load_steps=8 format=3 uid="uid://ce5oaiyhmu7tn"]
 
 [ext_resource type="Texture2D" uid="uid://b5c0sx7wcja3l" path="res://Images/title/titlebg.png" id="1_565gj"]
 [ext_resource type="Script" path="res://Source/title.cs" id="1_r6u42"]
 [ext_resource type="Texture2D" uid="uid://c1pjrrwmucant" path="res://Images/title/title_md.png" id="2_81elb"]
 [ext_resource type="LabelSettings" uid="uid://d0komd655mqgx" path="res://Fonts/fontcfg.tres" id="3_38cjg"]
 [ext_resource type="AudioStream" uid="uid://c06nd1oqdh66a" path="res://Audio/Music/title.ogg" id="4_a8p54"]
+[ext_resource type="AudioStream" uid="uid://cpgaq2dwe6jfj" path="res://Audio/SFX/back.wav" id="6_r3kdl"]
+[ext_resource type="AudioStream" uid="uid://iolrfh8ye4t3" path="res://Audio/SFX/select.wav" id="7_ccu2x"]
 
 [node name="titleScreen" type="Node2D"]
 script = ExtResource("1_r6u42")
@@ -24,31 +26,36 @@ show_behind_parent = true
 position = Vector2(1, 3)
 texture = ExtResource("2_81elb")
 
-[node name="copyString" type="Label" parent="."]
+[node name="copyText" type="Label" parent="."]
 offset_left = 1.0
 offset_top = 231.0
 offset_right = 170.0
 offset_bottom = 239.0
-text = "©TheWindowsPro98 2024"
+text = "©TheWindowsPro98 2023-2024"
 label_settings = ExtResource("3_38cjg")
 
-[node name="titleMus" type="AudioStreamPlayer2D" parent="."]
-position = Vector2(213, 120)
-stream = ExtResource("4_a8p54")
-autoplay = true
-
-[node name="verString" type="Label" parent="."]
+[node name="verText" type="Label" parent="."]
 offset_left = 52.0
 offset_top = 50.0
 offset_right = 116.0
 offset_bottom = 58.0
-text = "Version ppa1.0.0"
+text = "Version pa1.0.0"
 label_settings = ExtResource("3_38cjg")
 
-[node name="Label" type="Label" parent="."]
+[node name="startText" type="Label" parent="."]
 offset_left = 141.0
 offset_top = 120.0
 offset_right = 285.0
 offset_bottom = 128.0
 text = "Press START Button"
 label_settings = ExtResource("3_38cjg")
+
+[node name="titleMus" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("4_a8p54")
+autoplay = true
+
+[node name="backSFX" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("6_r3kdl")
+
+[node name="selectSFX" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("7_ccu2x")

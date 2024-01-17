@@ -2,20 +2,20 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://x4w0x8ok46yk"
-path="res://.godot/imported/frown.png-9135afc3f57a993d0759329986bddab9.ctex"
+uid="uid://cachicobd5s46"
+path="res://.godot/imported/GradientVertical.png-d73fd2ef16dc23e36078647d72dc31d9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Images/bsod/frown.png"
-dest_files=["res://.godot/imported/frown.png-9135afc3f57a993d0759329986bddab9.ctex"]
+source_file="res://addons/UniversalFade/Patterns/GradientVertical.png"
+dest_files=["res://.godot/imported/GradientVertical.png-d73fd2ef16dc23e36078647d72dc31d9.ctex"]
 
 [params]
 
-compress/mode=3
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/hdr_compression=1

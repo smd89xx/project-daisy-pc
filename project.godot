@@ -8,11 +8,15 @@
 
 config_version=5
 
+[addons]
+
+universal_fade/patterns_directory="res://addons/UniversalFade/Patterns"
+
 [application]
 
 config/name="Project Daisy"
 config/description="<tbd>"
-config/version="1.0.0.0"
+config/version="1.0.0.1"
 run/main_scene="res://Scenes/title.tscn"
 config/features=PackedStringArray("4.2", "C#", "Forward Plus")
 boot_splash/bg_color=Color(0.141176, 0.141176, 0.141176, 1)
@@ -28,6 +32,11 @@ window/stretch/mode="viewport"
 [dotnet]
 
 project/assembly_name="Project Daisy"
+
+[filesystem]
+
+import/blender/enabled=false
+import/fbx/enabled=false
 
 [input]
 
