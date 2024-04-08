@@ -13,7 +13,7 @@ Music
 - Sonic the Hedgehog 3 - Angel Island Zone (Act 2): Jun Senoue, Tetsuyuki Maeda, Masaru Setsumaru, Tomonori Sawada, Masayuki Nagao, Sachio Ogawa, Howard Drossin (temporary)
 
 Libraries n stuff
----------
+-----------------
 
 - [Godot](https://godotengine.org/) by Juan Linietsky and Ariel Manzur
 

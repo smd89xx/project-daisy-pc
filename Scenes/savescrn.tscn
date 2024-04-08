@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3 uid="uid://csll1uud44ldr"]
+
+[ext_resource type="Script" path="res://Source/savescrn.cs" id="1_wr1sv"]
+[ext_resource type="AudioStream" uid="uid://dnu502rsb1oa3" path="res://Audio/Music/prefs.ogg" id="2_4c1g4"]
+[ext_resource type="Texture2D" uid="uid://b5c0sx7wcja3l" path="res://Images/title/titlebg.png" id="2_phsyb"]
+
+[node name="saveScreen" type="Node2D"]
+script = ExtResource("1_wr1sv")
+
+[node name="prefsMus" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("2_4c1g4")
+autoplay = true
+
+[node name="titleBG" type="Sprite2D" parent="."]
+texture = ExtResource("2_phsyb")
+centered = false

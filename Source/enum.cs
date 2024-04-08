@@ -7,4 +7,10 @@ namespace Daisy
     {
         generic,
     }
+    enum FadeStates
+    {
+        off,
+        fwd,
+        back,
+    }
 }

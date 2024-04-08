@@ -21,4 +21,4 @@ How 2 build thing<sup>1</sup>
 
 ---
 
-<sup>1</sup>Better build instructions will come in the future. Hope this is good enough in the meantime.
+<sup>1</sup>Better build instructions may come in the future. Hope this is good enough in the meantime.
